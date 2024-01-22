@@ -14,17 +14,14 @@ def default_encoder(obj):
 
 
 def get_auth_token():
-    # taiga_username = input("Enter your Taiga username: ")
-    # taiga_password = getpass.getpass("Enter your Taiga password: ")
-    taiga_username = "ser515asu"
-    taiga_password = "a5uP0l4!"
+    taiga_username = input("Enter your Taiga username: ")
+    taiga_password = getpass.getpass("Enter your Taiga password: ")
     auth_token = authenticate(taiga_username, taiga_password)
     return auth_token
 
 
 def get_project_slug(auth_token):
-    # project_slug = input("Enter the Taiga project slug: ")
-    project_slug = "amarjeetsingh-test_cassess"
+    project_slug = input("Enter the Taiga project slug: ")
     project_info = get_project_by_slug(project_slug, auth_token)
     task_status_name = get_project_task_status_name(project_info["id"], auth_token)
 
