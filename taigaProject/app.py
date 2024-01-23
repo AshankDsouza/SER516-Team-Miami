@@ -5,6 +5,7 @@ from taigaApi.authenticate import authenticate
 from taigaApi.project.getProjectBySlug import get_project_by_slug
 from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
 from taigaApi.userStory.getUserStory import get_user_story
+from taigaApi.task.getTaskHistory import get_task_history
 from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks
 
 
@@ -30,7 +31,10 @@ def get_project_slug(auth_token):
         "team_members": [member["full_name"] for member in project_info.get("members", [])],
         "taskboard_column": [status["name"] for status in task_status_name],
     }
+
+    print("\n***********************************\n")
     print(json.dumps(project_details, indent=2))
+    print("\n***********************************\n")
     return project_info["id"]
 
 
@@ -47,7 +51,9 @@ def get_open_user_stories(project_id, auth_token):
             for story in open_user_stories
         ]
     }
+    print("\n***********************************\n")
     print(json.dumps(project_details, indent=2))
+    print("\n***********************************\n")
 
 
 def get_closed_tasks_per_week(project_id, auth_token):
@@ -67,22 +73,35 @@ def get_closed_tasks_per_week(project_id, auth_token):
         else:
             task_groups.append({"weekEnding": week_end, "closedTasks": 1})
 
+    print("\n***********************************\n")
     print(json.dumps(task_groups, indent=2, default=default_encoder))
+    print("\n***********************************\n")
 
 
 def get_lead_time(project_id, auth_token):
-    user_stories = get_user_story(project_id, auth_token)
+    tasks = get_closed_tasks(project_id, auth_token)
     lead_time = 0
-    closed_user_story = 0
-    for user_story in user_stories:
-        if user_story["is_closed"]:
-            created_date = datetime.fromisoformat(user_story["created_date"])
-            finished_date = datetime.fromisoformat(user_story['finish_date'])
-            lead_time += (finished_date - created_date).days
-            closed_user_story += 1
+    closed_tasks = 0
+    for task in tasks:
+        created_date = datetime.fromisoformat(task["created_date"])
+        finished_date = datetime.fromisoformat(task['finished_date'])
+        lead_time += (finished_date - created_date).days
+        closed_tasks += 1
 
-    avg_lead_time = lead_time / closed_user_story
+    avg_lead_time = round((lead_time / closed_tasks), 2)
+    print("\n***********************************\n")
     print("Average Lead Time: ", avg_lead_time)
+    print("\n***********************************\n")
+
+
+def get_cycle_time(project_id, auth_token):
+    tasks = get_closed_tasks(project_id, auth_token)
+    cycle_time, closed_task = get_task_history(tasks, auth_token)
+    avg_cycle_time = round((cycle_time / closed_task), 2)
+
+    print("\n***********************************\n")
+    print("Average Cycle Time: ", avg_cycle_time)
+    print("\n***********************************\n")
 
 
 def handle_user_action(project_id, auth_token):
@@ -97,25 +116,26 @@ def handle_user_action(project_id, auth_token):
             "Enter action: "
         )
         if action == "1":
-            print("Getting list of all open user stories...")
+            print("\nGetting list of all open user stories...")
             get_open_user_stories(project_id, auth_token)
 
         elif action == "2":
-            print("Calculating throughput metric...")
+            print("\nCalculating throughput metric...")
             get_closed_tasks_per_week(project_id, auth_token)
 
         elif action == "3":
-            print("Calculating average lead time...")
+            print("\nCalculating average lead time...")
             get_lead_time(project_id, auth_token)
 
         elif action == "4":
-            print("Calculating average cycle time...")
+            print("\nCalculating average cycle time...")
+            get_cycle_time(project_id, auth_token)
 
         elif action == "5":
-            print("Exiting...")
+            print("\nExiting...")
             break
         else:
-            print("Invalid choice. Please enter a valid option.")
+            print("\nInvalid choice. Please enter a valid option.")
 
 
 def main():

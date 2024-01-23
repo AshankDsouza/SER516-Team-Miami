@@ -30,10 +30,10 @@ def get_closed_tasks(project_id, auth_token):
     if tasks:
         closed_tasks = [
             {
+                "id": task["id"],
                 "subject": task["subject"],
                 "created_date": task["created_date"],
                 "finished_date": task["finished_date"]
-
             }
             for task in tasks if task.get("is_closed")
         ]
