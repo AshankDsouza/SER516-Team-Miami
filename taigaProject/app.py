@@ -9,11 +9,13 @@ from taigaApi.task.getTaskHistory import get_task_history
 from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks
 
 
+# Function to format datetime objects for JSON serialization
 def default_encoder(obj):
     if isinstance(obj, datetime):
         return obj.strftime("%Y-%m-%d")
 
 
+# Function to get Taiga authentication token from user input
 def get_auth_token():
     taiga_username = input("Enter your Taiga username: ")
     taiga_password = getpass.getpass("Enter your Taiga password: ")
@@ -21,6 +23,7 @@ def get_auth_token():
     return auth_token
 
 
+# Function to get project slug and display project details
 def get_project_slug(auth_token):
     project_slug = input("Enter the Taiga project slug: ")
     project_info = get_project_by_slug(project_slug, auth_token)
@@ -38,6 +41,7 @@ def get_project_slug(auth_token):
     return project_info["id"]
 
 
+# Function to get open user stories in the project
 def get_open_user_stories(project_id, auth_token):
     user_stories = get_user_story(project_id, auth_token)
     open_user_stories = [story for story in user_stories if not story["is_closed"]]
@@ -56,6 +60,7 @@ def get_open_user_stories(project_id, auth_token):
     print("\n***********************************\n")
 
 
+# Function to calculate and display closed tasks per week
 def get_closed_tasks_per_week(project_id, auth_token):
     closed_tasks = get_closed_tasks(project_id, auth_token)
     task_groups = []
@@ -78,6 +83,7 @@ def get_closed_tasks_per_week(project_id, auth_token):
     print("\n***********************************\n")
 
 
+# Function to calculate and display average lead time
 def get_lead_time(project_id, auth_token):
     tasks = get_closed_tasks(project_id, auth_token)
     lead_time = 0
@@ -94,6 +100,7 @@ def get_lead_time(project_id, auth_token):
     print("\n***********************************\n")
 
 
+# Function to calculate and display average cycle time
 def get_cycle_time(project_id, auth_token):
     tasks = get_closed_tasks(project_id, auth_token)
     cycle_time, closed_task = get_task_history(tasks, auth_token)
@@ -104,6 +111,7 @@ def get_cycle_time(project_id, auth_token):
     print("\n***********************************\n")
 
 
+# Function to handle user actions and provide options
 def handle_user_action(project_id, auth_token):
     while True:
         action = input(
@@ -138,6 +146,7 @@ def handle_user_action(project_id, auth_token):
             print("\nInvalid choice. Please enter a valid option.")
 
 
+# Main function to execute the program
 def main():
     auth_token = get_auth_token()
     if auth_token:
