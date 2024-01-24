@@ -40,3 +40,14 @@ Before running the script, make sure you have the following installed:
     ```bash
     python3 app.py
     ```
+
+## Getting Taiga Project Slug
+
+To interact with the Taiga API using the provided Python script, you will need the project slug of your Taiga project. Follow these steps to find the project slug:
+
+1. **Login to Taiga**: Open your web browser and log in to your Taiga account.
+
+2. **Select the Project**: Navigate to the project for which you want to obtain the project slug.
+
+3. **Project URL**: Look at the URL in your browser's address bar while you are inside the project. The project slug is the part of the URL that comes after the last slash ("/"). For example:
+
