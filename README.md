@@ -6,6 +6,7 @@ This project is a Python script for interacting with the Taiga API to perform va
 
 ## Prerequisites
 
+
 Before running the script, make sure you have the following installed:
 
 - Python 3
