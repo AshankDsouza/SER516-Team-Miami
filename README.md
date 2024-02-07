@@ -15,6 +15,7 @@ Before running the script, make sure you have the following installed:
 
 ## Setup
 
+
 1. Clone the repository:
 
    ```bash
