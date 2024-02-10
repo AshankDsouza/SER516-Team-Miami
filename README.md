@@ -33,13 +33,16 @@ Before running the script, make sure you have the following installed:
 
     ```bash
     TAIGA_URL=https://api.taiga.io/api/v1
+    USER_NAME=<your taiga usernam>
+    PASSWORD=<your taiga password>
     ```
    
 4. Run the script:
 
     ```bash
-    python3 app.py
+    python3 flask_app.py
     ```
+
 
 ## Getting Taiga Project Slug
 
