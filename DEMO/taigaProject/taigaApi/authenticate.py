@@ -8,6 +8,9 @@ load_dotenv()
 
 # Function to authenticate with the Taiga API using provided credentials
 def authenticate(username, password):
+    username = os.getenv('USER_NAME')
+    password = os.getenv('PASSWORD')
+
     taiga_url = os.getenv('TAIGA_URL')
     payload = {
         "type": "normal",

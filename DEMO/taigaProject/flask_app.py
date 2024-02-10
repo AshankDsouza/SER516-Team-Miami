@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request 
 from taiga import TaigaAPI
 import re 
+from app import get_project_slug, get_auth_token
+
 
 # api = TaigaAPI()
 
@@ -29,6 +31,16 @@ def get_slug_from_url(url):
         return match.group(1)
     else:
         return None
+
+@app.route('/project/<project_id>', methods=['GET'])  
+def get_project_details(project_id):
+      print("Project id: ", project_id)
+
+      auth = get_auth_token()
+      proj = get_project_slug(auth, project_id)
+
+      return jsonify(proj)
+
 
 # @app.route('/project/<project_id>', methods=['GET']) 
 # def get_project_data(project_id): 

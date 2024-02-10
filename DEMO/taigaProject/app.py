@@ -17,15 +17,15 @@ def default_encoder(obj):
 
 # Function to get Taiga authentication token from user input
 def get_auth_token():
-    taiga_username = input("Enter your Taiga username: ")
-    taiga_password = getpass.getpass("Enter your Taiga password: ")
-    auth_token = authenticate(taiga_username, taiga_password)
+    #taiga_username = input("Enter your Taiga username: ")
+    #taiga_password = getpass.getpass("Enter your Taiga password: ")
+    auth_token = authenticate(None, None)
     return auth_token
 
 
 # Function to get project slug and display project details
-def get_project_slug(auth_token):
-    project_slug = input("Enter the Taiga project slug: ")
+def get_project_slug(auth_token, project_slug):
+    # project_slug = input("Enter the Taiga project slug: ")
     project_info = get_project_by_slug(project_slug, auth_token)
     task_status_name = get_project_task_status_name(project_info["id"], auth_token)
 
@@ -38,7 +38,7 @@ def get_project_slug(auth_token):
     print("\n***********************************\n")
     print(json.dumps(project_details, indent=2))
     print("\n***********************************\n")
-    return project_info["id"]
+    return project_info
 
 
 # Function to get open user stories in the project
