@@ -51,3 +51,8 @@ To interact with the Taiga API using the provided Python script, you will need t
 
 3. **Project URL**: Look at the URL in your browser's address bar while you are inside the project. The project slug is the part of the URL that comes after the last slash ("/"). For example:
 
+## Build and Run Insructions
+pip install -r requirements.txt
+flask --app Backend/flaskProject/main run
+
+
