@@ -41,10 +41,13 @@ def log_out():
 
 @app.route('/slug-input', methods=['GET', 'POST'])
 def slug_input():
-    if 'auth_token' not in session: 
+    if 'auth_token' not in session:
         return redirect('/')
-
     if request.method == 'POST':
-        print('Take slug input')
-
+        project_slug = request.form['slugInput']
+        project_info = get_project_by_slug(project_slug, session['auth_token'])
+        session["project_id"] = project_info["id"]
+        if session["project_id"] == None:
+            return "Wrong slug input. Please try again."
+        return redirect('/metric-selection')
     return render_template('slug-input.html')
