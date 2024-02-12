@@ -101,3 +101,27 @@ def work_done_chart():
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
         return 'None'
+
+@app.route('/<user_story>/get-business-value', methods=['GET'])
+def get_business_value_by_user_story(user_story):
+    if 'auth_token' not in session:
+        return redirect('/')
+    auth_token  = session['auth_token']
+    taiga_url   = os.getenv('TAIGA_URL')
+    business_value_api_url  = f"{taiga_url}/userstories/custom-attributes-values/{user_story}"
+    # Define headers including the authorization token and content type
+    headers = {
+        'Authorization': f'Bearer {auth_token}',
+        'Content-Type': 'application/json',
+    }
+    try:
+        # Make a GET request to Taiga API to retrieve user stories
+        response = requests.get(business_value_api_url, headers=headers)
+        response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+        # Extracting information from the response
+        business_value_res = response.json()
+        return business_value_res["attributes_values"]["40198"]
+    except requests.exceptions.RequestException as e:
+        # Handle errors during the API request and print an error message
+        print(f"Error fetching project by slug: {e}")
+        return 'None'
