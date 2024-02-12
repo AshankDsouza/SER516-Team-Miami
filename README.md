@@ -55,6 +55,8 @@ To interact with the Taiga API using the provided Python script, you will need t
 ```bash
 pip install -r requirements.txt
  ```
-flask --app Backend/flaskProject/main run
 
+```bash
+flask --app Backend/flaskProject/main run
+ ```
 
