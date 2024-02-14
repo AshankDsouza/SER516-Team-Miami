@@ -82,6 +82,64 @@
         }
     });
 
+    // p id 1521721
+    // ust 5468126
+    // sp 376613
+
+    let user_story_bv_data = []
+
+    $(function () {
+        $.ajax({
+            url: '/test',
+            type: 'GET',
+            success: function (response) {
+                // console.log(response)
+                $.each(response, function (key, val) {
+                    if (val['epics'][0]['ref'] == 1) {
+                        console.log(val['subject'] + '===>>>' + val['backlog_order'])
+                        console.log(val)
+                        // calling(val['id'])
+                        $.ajax({
+                            url: `/${val['id']}/get-business-value`,
+                            type: 'GET',
+                            success: function (response) {
+                                // console.log(response)
+                                user_story_bv_data.push({
+                                    'ref': val['ref'],
+                                    'subject': val['subject'],
+                                    'bv': response
+                                })
+                            },
+                            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                console.log(XMLHttpRequest.status)
+                                console.log(textStatus)
+                            }
+                        })
+                    }
+                })
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                console.log(XMLHttpRequest.status)
+                console.log(textStatus)
+            }
+        })
+        console.log(user_story_bv_data)
+    })
+
+    function calling(user_story_id) {
+        $.ajax({
+            url: `/${user_story_id}/get-business-value`,
+            type: 'GET',
+            success: function (response) {
+                console.log(response)
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                console.log(XMLHttpRequest.status)
+                console.log(textStatus)
+            }
+        })
+    }
+
 </script>
 
 </html>

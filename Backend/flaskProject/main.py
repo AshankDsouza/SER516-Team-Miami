@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import os
 import json
 from datetime import datetime, timedelta
@@ -178,7 +178,6 @@ def get_business_value_by_user_story(user_story):
     except requests.exceptions.RequestException as e:
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
-        # return e
         return "None"
 
 
@@ -187,3 +186,14 @@ def render_burndown_bv():
     if "auth_token" not in session:
         return redirect("/")
     return render_template("burndown-bv.html")
+
+
+@app.route("/test", methods=["GET", "POST"])
+def testAPI():
+    if "auth_token" not in session:
+        return redirect("/")
+
+    if request.method == "GET":
+        user_stories = get_user_story(session["project_id"], session["auth_token"])
+
+        return user_stories
