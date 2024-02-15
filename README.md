@@ -21,21 +21,14 @@ Before running the script, make sure you have the following installed:
    git clone https://github.com/ser516asu/SER516-Team-Miami.git
    cd SER516-Team-Miami
    ```
-   
-2. Install dependencies: 
 
-    ```bash
-   pip install -r requirements.txt
-    ```
-
-
-3. Create a .env file in the project root and add the following:
+2. Create a .env file in the project root and add the following:
 
     ```bash
     pip install -r requirements.txt
     ```
 
-4. Migrate to backend folder by executing the following command:
+3. Migrate to backend folder by executing the following command:
 
     ```bash
     cd Backend
