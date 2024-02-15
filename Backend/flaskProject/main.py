@@ -191,23 +191,29 @@ def render_burndown_bv():
 @app.route("/burndown-bv-data", methods=["GET", "POST"])
 def get_burndown_bv_data():
     if request.method == "GET":
-        # all user stories data
+        # get all user stories data
         user_stories = get_user_story(session["project_id"], session["auth_token"])
-        # use user stories id to get bv
-        response = {
-            "user_story_ref": [],
-            "user_story_subject": [],
-            "ideal_bv": [],
-            "current_bv": [],
-        }
+        # use each user stories id to get bv and check if done
+        bv_per_date = [0] * 21
         for idx, val in enumerate(user_stories):
-            if val["epics"][0]["ref"] == 1:
-                bv = get_business_value_by_user_story(val["id"])
-                response["user_story_ref"].append(val["ref"])
-                response["user_story_subject"].append(val["subject"])
-                response["ideal_bv"].append(bv)
+            ## Sprint1 filter
+            if val["milestone_name"] == "Sprint1":
+                bv = int(get_business_value_by_user_story(val["id"]))
                 if val["status_extra_info"]["name"] == "Done":
-                    response["current_bv"].append(bv)
-                else:
-                    response["current_bv"].append("0")
-        return response
+                    ## Jan filter
+                    if val["finish_date"][5:7] == "01":
+                        ## convert date to index
+                        bv_per_date[int(val["finish_date"][8:10]) - 29] += bv
+                    ## Feb filter
+                    if val["finish_date"][5:7] == "02":
+                        bv_per_date[int(val["finish_date"][8:10]) + 2] += bv
+        # calc bv accumulation
+        bv_accumulation = 0
+        is_accumulation = False
+        for idx, val in enumerate(bv_per_date):
+            if val != 0:
+                bv_accumulation += val
+                is_accumulation = True
+            if val == 0 and is_accumulation == True:
+                bv_per_date[idx] = bv_accumulation
+        return bv_per_date
