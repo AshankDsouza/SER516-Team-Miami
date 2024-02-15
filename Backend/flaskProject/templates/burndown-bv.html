@@ -25,7 +25,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+                <div class="chart-container" style="position: relative; height:80vh; width:160vw">
                     <canvas id="bv_burndown"></canvas>
                 </div>
             </div>
@@ -35,86 +35,53 @@
 </body>
 
 <script>
-
-    new Chart($('#bv_burndown'), {
-        type: 'line',
-        data: {
-            labels: ['02/01', '02/02', '02/03', '02/04', '02/05', '02/06'],
-            datasets: [
-                {
-                    label: 'Business Value 1',
-                    data: [1, 1, 2, 3, 5, 8],
-                    borderColor: '#006eff',
-                    backgroundColor: '#00aaff',
-                },
-                {
-                    label: 'Business Value 2',
-                    data: [1, 2, 4, 6, 8, 10],
-                    borderColor: '#ff0000',
-                    backgroundColor: '#ff008c',
-                }
-            ]
-        },
-        options: {
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Date',
-                        font: {
-                            size: 15
-                        },
-                    },
-                },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'BV',
-                        font: {
-                            size: 15
-                        },
-                    },
-
-                }
-            },
-
-        }
-    });
-
-    // p id 1521721
-    // ust 5468126
-    // sp 376613
-
-    let user_story_bv_data = []
-
     $(function () {
         $.ajax({
-            url: '/test',
+            url: '/burndown-bv-data',
             type: 'GET',
             success: function (response) {
-                // console.log(response)
-                $.each(response, function (key, val) {
-                    if (val['epics'][0]['ref'] == 1) {
-                        console.log(val['subject'] + '===>>>' + val['backlog_order'])
-                        console.log(val)
-                        // calling(val['id'])
-                        $.ajax({
-                            url: `/${val['id']}/get-business-value`,
-                            type: 'GET',
-                            success: function (response) {
-                                // console.log(response)
-                                user_story_bv_data.push({
-                                    'ref': val['ref'],
-                                    'subject': val['subject'],
-                                    'bv': response
-                                })
+                new Chart($('#bv_burndown'), {
+                    type: 'line',
+                    data: {
+                        labels: response['user_story_subject'],
+                        datasets: [
+                            {
+                                label: 'Ideal Business Value',
+                                data: response['ideal_bv'],
+                                borderColor: '#006eff',
+                                backgroundColor: '#00aaff',
                             },
-                            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                                console.log(XMLHttpRequest.status)
-                                console.log(textStatus)
+                            {
+                                label: 'Current Business Value',
+                                data: response['current_bv'],
+                                borderColor: '#ff0000',
+                                backgroundColor: '#ff008c',
                             }
-                        })
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'User Stories',
+                                    font: {
+                                        size: 15
+                                    },
+                                },
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'BV',
+                                    font: {
+                                        size: 15
+                                    },
+                                },
+
+                            }
+                        },
                     }
                 })
             },
@@ -123,22 +90,7 @@
                 console.log(textStatus)
             }
         })
-        console.log(user_story_bv_data)
     })
-
-    function calling(user_story_id) {
-        $.ajax({
-            url: `/${user_story_id}/get-business-value`,
-            type: 'GET',
-            success: function (response) {
-                console.log(response)
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                console.log(XMLHttpRequest.status)
-                console.log(textStatus)
-            }
-        })
-    }
 
 </script>
 

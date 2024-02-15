@@ -188,12 +188,26 @@ def render_burndown_bv():
     return render_template("burndown-bv.html")
 
 
-@app.route("/test", methods=["GET", "POST"])
-def testAPI():
-    if "auth_token" not in session:
-        return redirect("/")
-
+@app.route("/burndown-bv-data", methods=["GET", "POST"])
+def get_burndown_bv_data():
     if request.method == "GET":
+        # all user stories data
         user_stories = get_user_story(session["project_id"], session["auth_token"])
-
-        return user_stories
+        # use user stories id to get bv
+        response = {
+            "user_story_ref": [],
+            "user_story_subject": [],
+            "ideal_bv": [],
+            "current_bv": [],
+        }
+        for idx, val in enumerate(user_stories):
+            if val["epics"][0]["ref"] == 1:
+                bv = get_business_value_by_user_story(val["id"])
+                response["user_story_ref"].append(val["ref"])
+                response["user_story_subject"].append(val["subject"])
+                response["ideal_bv"].append(bv)
+                if val["status_extra_info"]["name"] == "Done":
+                    response["current_bv"].append(bv)
+                else:
+                    response["current_bv"].append("0")
+        return response
