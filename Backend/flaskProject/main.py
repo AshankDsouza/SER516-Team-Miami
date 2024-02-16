@@ -171,3 +171,22 @@ def get_business_value_by_user_story(user_story):
         print(f"Error fetching project by slug: {e}")
         return 'None'
 
+
+@app.route('/lead-time-graph', methods=['GET'])
+def lead_time_graph():
+    if 'auth_token' not in session:
+        return redirect('/')
+
+    auth_token = session['auth_token']
+    # taiga_url = os.getenv('TAIGA_URL')
+
+    print(request.args)
+
+    project_id = request.args.get('projectid')
+
+    if ((not project_id)):
+        return 'Invalid request!'
+
+    return get_lead_times_for_tasks(project_id, auth_token)
+
+

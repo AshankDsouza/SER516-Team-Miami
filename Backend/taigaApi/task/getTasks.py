@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -81,4 +82,21 @@ def get_all_tasks(project_id, auth_token):
         return all_tasks
     else:
         return None
+
+
+def get_lead_times_for_tasks(project_id, auth_token):
+    tasks = get_closed_tasks(project_id, auth_token)
+    taskList = []
+    for task in tasks:
+        created_date = datetime.fromisoformat(task["created_date"])
+        finished_date = datetime.fromisoformat(task['finished_date'])
+        temp = dict(task)
+        temp['lead_time'] = (finished_date - created_date).days + (finished_date - created_date).seconds/86400
+        task['created_date'] = datetime.strftime(created_date, '%d %b')
+        task['finished_date'] = datetime.strftime(finished_date, '%d %b')
+        taskList.append(temp)
+
+    taskList.sort(key = lambda x : datetime.fromisoformat(x['finished_date']))
+    return taskList
+
 
