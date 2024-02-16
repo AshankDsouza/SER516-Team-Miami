@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import getpass
+import os
 import json
 from datetime import datetime, timedelta
 from taigaApi.authenticate import authenticate
@@ -9,6 +9,9 @@ from taigaApi.userStory.getUserStory import get_user_story
 from taigaApi.task.getTaskHistory import get_task_history
 from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks
 import secrets
+import requests
+import os 
+import datetime
 
 
 app = Flask(__name__)
@@ -48,3 +51,117 @@ def slug_input():
         print('Take slug input')
 
     return render_template('slug-input.html')
+
+@app.route('/work-done-chart', methods=['GET'])
+def work_done_chart():
+    if 'auth_token' not in session: 
+        return redirect('/')
+    
+    auth_token  = session['auth_token']
+    taiga_url   = os.getenv('TAIGA_URL')
+
+    project_id  = request.args.get('projectid')
+    sprint_id   = request.args.get('sprintid')
+
+    if((not project_id) or (not sprint_id)):
+        return 'Invalid request!'
+
+    milestones_api_url  = f"{taiga_url}/milestones/{sprint_id}?project={project_id}"
+    taks_api_url        = f"{taiga_url}/tasks?project={project_id}"
+
+    # Define headers including the authorization token and content type
+    headers = {
+        'Authorization': f'Bearer {auth_token}',
+        'Content-Type': 'application/json',
+    }
+
+    try:
+        # Make a GET request to Taiga API to retrieve user stories
+        mailstones_res = requests.get(milestones_api_url, headers=headers)
+        mailstones_res.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+
+        # Extracting information from the mailstones_res
+        milestone = mailstones_res.json()
+
+        # Make a GET request to Taiga API to retrieve tasks
+        tasks_res = requests.get(taks_api_url, headers=headers)
+        tasks_res.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+
+        # Extracting information from the tasks_res
+        tasks = tasks_res.json()
+
+        data_to_plot = { 
+            "total_story_points": 0,
+            "x_axis": [],
+            "y_axis": [],
+            "ideal_projection": [],
+            "actual_projection": [],
+            "sprint_start_date": milestone["estimated_start"],
+            "sprint_end_date": milestone["estimated_finish"],
+        }
+
+        processing_user_stories = set()
+
+        for user_story in milestone["user_stories"]:
+            if user_story["total_points"] == None: 
+                continue
+
+            processing_user_stories.add(user_story["id"])
+            data_to_plot["total_story_points"] += int(user_story["total_points"])
+            
+        
+        start_date  = datetime.strptime(data_to_plot["sprint_start_date"], '%Y-%m-%d')
+        end_date    = datetime.strptime(data_to_plot["sprint_end_date"], '%Y-%m-%d')
+
+        data_to_plot["x_axis"] = [(start_date + timedelta(days=day)).strftime("%d %b %Y") for day in range((end_date - start_date).days + 1)]
+        data_to_plot["y_axis"] = [i for i in range(0, data_to_plot["total_story_points"] + 20, 10)]
+
+        ideal_graph_points = data_to_plot["total_story_points"]
+        avg_comp_story_point = data_to_plot["total_story_points"]/(len(data_to_plot["x_axis"]) - 1)
+
+        while ideal_graph_points > 0:
+            temp = round(ideal_graph_points - avg_comp_story_point, 1)
+            if(temp > 0):
+                data_to_plot["ideal_projection"].append(temp)
+            else:
+                data_to_plot["ideal_projection"].append(0)
+
+            ideal_graph_points = temp
+
+        print(json.dumps(list(processing_user_stories), indent=2))
+
+        processed_tasks = {}
+        for task in tasks:
+            # print(f'{task["id"]}:  {not task["status_extra_info"]["is_closed"]} or {task["user_story"] not in processing_user_stories}')
+            
+            if(not task["status_extra_info"]["is_closed"] or task["user_story"] not in processing_user_stories):
+                continue
+
+            task_finished_date = datetime.strptime(task["finished_date"], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d %b %Y")
+
+            if(task_finished_date in processed_tasks):
+                processed_tasks[task_finished_date] = round(processed_tasks[task_finished_date] - avg_comp_story_point, 1)
+            else:
+                processed_tasks[task_finished_date] = round(data_to_plot["total_story_points"], 1)
+                # print(processed_tasks)
+
+        for index in range(0, len(data_to_plot["x_axis"])):
+            day = data_to_plot["x_axis"][index]
+
+            if(day in processed_tasks):
+                data_to_plot["actual_projection"].append(processed_tasks[day])
+                continue
+
+            if(index == 0):
+                data_to_plot["actual_projection"].append(data_to_plot["total_story_points"])
+                continue
+
+            print(data_to_plot["actual_projection"])
+            data_to_plot["actual_projection"].append(data_to_plot["actual_projection"][index - 1])
+            
+
+        return json.dumps(data_to_plot)
+    except requests.exceptions.RequestException as e:
+        # Handle errors during the API request and print an error message
+        print(f"Error fetching project by slug: {e}")
+        return 'None'
