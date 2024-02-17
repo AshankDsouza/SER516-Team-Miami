@@ -138,7 +138,7 @@ def work_done_chart(project_id, sprint_id):
             
 
         return json.dumps(data_to_plot)
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
         return 'None'
