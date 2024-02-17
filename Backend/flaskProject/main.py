@@ -70,6 +70,9 @@ def work_done_chart(project_id, sprint_id):
         tasks = get_tasks(project_id, auth_token)
 
         # Data required to plot is stored here
+        partial_work_done_projection = {}
+        processing_user_stories = {}
+
         data_to_plot = { 
             "total_story_points": 0,
             "x_axis": [],
@@ -80,20 +83,28 @@ def work_done_chart(project_id, sprint_id):
             "sprint_end_date": milestone["estimated_finish"],
         }
 
-        processing_user_stories = set()
-
         for user_story in milestone["user_stories"]:
             if user_story["total_points"] == None: 
                 continue
 
-            processing_user_stories.add(user_story["id"])
+            processing_user_stories[user_story["id"]] = {
+                "points": int(user_story["total_points"]),
+                "created_date": user_story["created_date"],
+                "finish_date": user_story["finish_date"],
+                "tasks": []
+            }
             data_to_plot["total_story_points"] += int(user_story["total_points"])
             
+        # print("\n\n\n processing_user_stories: \n", json.dumps(processing_user_stories, indent=2), "\n\n\n")
         
         start_date  = datetime.strptime(data_to_plot["sprint_start_date"], '%Y-%m-%d')
         end_date    = datetime.strptime(data_to_plot["sprint_end_date"], '%Y-%m-%d')
 
-        data_to_plot["x_axis"] = [(start_date + timedelta(days=day)).strftime("%d %b %Y") for day in range((end_date - start_date).days + 1)]
+        for day in range((end_date - start_date).days + 1):
+            date = (start_date + timedelta(days=day)).strftime("%d %b %Y")
+            data_to_plot["x_axis"].append(date)
+            partial_work_done_projection[date] = 0 #data_to_plot["total_story_points"]
+
         data_to_plot["y_axis"] = [i for i in range(0, data_to_plot["total_story_points"] + 20, 10)]
 
         ideal_graph_points = data_to_plot["total_story_points"]
@@ -101,6 +112,10 @@ def work_done_chart(project_id, sprint_id):
 
         while ideal_graph_points > 0:
             temp = round(ideal_graph_points - avg_comp_story_point, 1)
+            
+            if(len(data_to_plot["ideal_projection"]) <= 0):
+                data_to_plot["ideal_projection"].append(data_to_plot["total_story_points"])
+
             if(temp > 0):
                 data_to_plot["ideal_projection"].append(temp)
             else:
@@ -108,37 +123,52 @@ def work_done_chart(project_id, sprint_id):
 
             ideal_graph_points = temp
 
-
-        processed_tasks = {}
         for task in tasks:
-            if(not task["status_extra_info"]["is_closed"] or task["user_story"] not in processing_user_stories):
+            if(task["user_story"] not in processing_user_stories):
                 continue
 
-            task_finished_date = datetime.strptime(task["finished_date"], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d %b %Y")
+            print(json.dumps(task, indent=2))
 
-            if(task_finished_date in processed_tasks):
-                processed_tasks[task_finished_date] = round(processed_tasks[task_finished_date] - avg_comp_story_point, 1)
-            else:
-                processed_tasks[task_finished_date] = round(data_to_plot["total_story_points"], 1)
-                # print(processed_tasks)
+            task_finished_date = None
+            if(task["status_extra_info"]["is_closed"]): 
+                task_finished_date = datetime.strptime(task["finished_date"], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d %b %Y")
+
+            processing_user_stories[task["user_story"]]["tasks"].append({
+                "closed": task["status_extra_info"]["is_closed"],
+                "finished_date": task_finished_date 
+            })
+
+        print("\n\n\n processing_user_stories: \n", json.dumps(processing_user_stories, indent=2), "\n\n\n")
+        
 
         for index in range(0, len(data_to_plot["x_axis"])):
-            day = data_to_plot["x_axis"][index]
+            current_processing_date = data_to_plot["x_axis"][index]
+            current_processing_date_points = 0
 
-            if(day in processed_tasks):
-                data_to_plot["actual_projection"].append(processed_tasks[day])
-                continue
+            if index <= 0:
+                current_processing_date_points = data_to_plot["total_story_points"]
+            else:
+                current_processing_date_points = data_to_plot["actual_projection"][index - 1]
 
-            if(index == 0):
-                data_to_plot["actual_projection"].append(data_to_plot["total_story_points"])
-                continue
+            for user_story_id in processing_user_stories:
+                user_story = processing_user_stories[user_story_id]
+                task_count = len(user_story["tasks"])
 
-            print(data_to_plot["actual_projection"])
-            data_to_plot["actual_projection"].append(data_to_plot["actual_projection"][index - 1])
-            
+                if(task_count <= 0):
+                    continue
+
+                task_points = user_story["points"]/task_count
+
+                for task in user_story["tasks"]:
+                    if(not task["closed"] or task["finished_date"] != current_processing_date):
+                        continue
+                    
+                    current_processing_date_points = current_processing_date_points - task_points
+
+            data_to_plot["actual_projection"].append(round(current_processing_date_points, 1))
 
         return json.dumps(data_to_plot)
     except Exception as e:
         # Handle errors during the API request and print an error message
-        print(f"Error fetching project by slug: {e}")
+        print(e)
         return 'None'
