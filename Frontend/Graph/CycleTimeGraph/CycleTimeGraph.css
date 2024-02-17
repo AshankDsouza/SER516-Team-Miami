@@ -1,0 +1,15 @@
+.graph-container {
+    width: 750px;
+    height: 426px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+}
+
+#line-graph {
+    width: 50%;
+    height: 50%;
+}
+
+h1.text-center {
+    margin-top: 20px; 
+}
