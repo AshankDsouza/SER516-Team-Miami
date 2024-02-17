@@ -33,8 +33,12 @@ Before running the script, make sure you have the following installed:
     ```bash
     cd Backend
     ```
+    
+4. Create a .env file is the root folder and copy paste the following below code in it:
+
+    TAIGA_URL=https://api.taiga.io/api/v1
    
-4. Run the script:
+5. Run the script:
 
    ```bash
    flask --app Backend/flaskProject/main run
