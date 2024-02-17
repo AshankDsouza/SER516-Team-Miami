@@ -7,12 +7,9 @@ from taigaApi.project.getProjectBySlug import get_project_by_slug
 from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
 from taigaApi.userStory.getUserStory import get_user_story
 from taigaApi.task.getTaskHistory import get_task_history
-from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks
+from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_tasks
+from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint
 import secrets
-import requests
-import os 
-import datetime
-
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -52,44 +49,27 @@ def slug_input():
 
     return render_template('slug-input.html')
 
-@app.route('/work-done-chart', methods=['GET'])
-def work_done_chart():
+@app.route('/<project_id>/<sprint_id>/partial-work-done-chart', methods=['GET'])
+def work_done_chart(project_id, sprint_id):
+    # If user is not logged in redirect to login page
     if 'auth_token' not in session: 
         return redirect('/')
     
-    auth_token  = session['auth_token']
-    taiga_url   = os.getenv('TAIGA_URL')
+    # Fetching the auth token from session
+    auth_token = session['auth_token']
 
-    project_id  = request.args.get('projectid')
-    sprint_id   = request.args.get('sprintid')
-
+    # Throwing error if the user has submitted project_id or sprint_id
     if((not project_id) or (not sprint_id)):
         return 'Invalid request!'
 
-    milestones_api_url  = f"{taiga_url}/milestones/{sprint_id}?project={project_id}"
-    taks_api_url        = f"{taiga_url}/tasks?project={project_id}"
-
-    # Define headers including the authorization token and content type
-    headers = {
-        'Authorization': f'Bearer {auth_token}',
-        'Content-Type': 'application/json',
-    }
-
     try:
-        # Make a GET request to Taiga API to retrieve user stories
-        mailstones_res = requests.get(milestones_api_url, headers=headers)
-        mailstones_res.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+        # Fetching milestones / usertories from taiga endpoint
+        milestone = get_milestones_by_sprint(project_id, sprint_id, auth_token)
 
-        # Extracting information from the mailstones_res
-        milestone = mailstones_res.json()
+        # Fetching tasks from taiga endpoint
+        tasks = get_tasks(project_id, auth_token)
 
-        # Make a GET request to Taiga API to retrieve tasks
-        tasks_res = requests.get(taks_api_url, headers=headers)
-        tasks_res.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-
-        # Extracting information from the tasks_res
-        tasks = tasks_res.json()
-
+        # Data required to plot is stored here
         data_to_plot = { 
             "total_story_points": 0,
             "x_axis": [],
@@ -128,12 +108,9 @@ def work_done_chart():
 
             ideal_graph_points = temp
 
-        print(json.dumps(list(processing_user_stories), indent=2))
 
         processed_tasks = {}
         for task in tasks:
-            # print(f'{task["id"]}:  {not task["status_extra_info"]["is_closed"]} or {task["user_story"] not in processing_user_stories}')
-            
             if(not task["status_extra_info"]["is_closed"] or task["user_story"] not in processing_user_stories):
                 continue
 
