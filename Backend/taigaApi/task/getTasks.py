@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -60,6 +61,27 @@ def get_closed_tasks(project_id, auth_token):
     else:
         return None
 
+def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
+
+    # Call the get_tasks function to retrieve all tasks for the project
+    tasks = get_tasks(project_id, auth_token)
+    if tasks:
+
+        # Filter tasks to include only closed tasks and format the result
+        closed_tasks = [
+            {
+                "id": task["id"],
+                "subject": task["subject"],
+                "created_date": task["created_date"],
+                "finished_date": task["finished_date"]
+            }
+            for task in tasks if task.get("is_closed") and task['milestone'] == sprint_id
+        ]
+
+        return closed_tasks
+    else:
+        return None
+
 
 # Function to retrieve all tasks for a specific project from the Taiga API
 def get_all_tasks(project_id, auth_token):
@@ -81,4 +103,21 @@ def get_all_tasks(project_id, auth_token):
         return all_tasks
     else:
         return None
+
+
+def get_lead_times_for_tasks(project_id, sprint_id, auth_token):
+    tasks = get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token)
+    taskList = []
+    for task in tasks:
+        created_date = datetime.fromisoformat(task["created_date"])
+        finished_date = datetime.fromisoformat(task['finished_date'])
+        temp = dict(task)
+        temp['lead_time'] = round((finished_date - created_date).days + (finished_date - created_date).seconds/86400, 2)
+        taskList.append(temp)
+    taskList.sort(key = lambda x : datetime.fromisoformat(x['finished_date']))
+    for task in taskList:
+        task['created_date'] = datetime.strftime(datetime.fromisoformat(task['created_date']), '%d %b %y')
+        task['finished_date'] = datetime.strftime(datetime.fromisoformat(task['finished_date']), '%d %b %y')
+    return taskList
+
 
