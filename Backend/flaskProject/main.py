@@ -1,15 +1,17 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import os
 import json
 from datetime import datetime, timedelta
-from Backend.taigaApi.authenticate import authenticate
-from Backend.taigaApi.project.getProjectBySlug import get_project_by_slug
-from Backend.taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
-from Backend.taigaApi.userStory.getUserStory import get_user_story
-from Backend.taigaApi.task.getTaskHistory import get_task_history
-from Backend.taigaApi.task.getTasks import get_closed_tasks, get_all_tasks
-from Backend.taigaApi.project.getProjectMilestones import get_number_of_milestones
+
+from taigaApi.authenticate import authenticate
+from taigaApi.project.getProjectBySlug import get_project_by_slug
+from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
+from taigaApi.userStory.getUserStory import get_user_story
+from taigaApi.task.getTaskHistory import get_task_history
+from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_closed_task, get_closed_tasks_for_a_sprint
+from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
 from Backend.taigaApi.task.getTasks import get_lead_times_for_tasks
+
 import secrets
 import requests
 
@@ -50,9 +52,10 @@ def slug_input():
     if request.method == 'POST':
         project_slug = request.form['slugInput']
         project_info = get_project_by_slug(project_slug, session['auth_token'])
+        if project_info == None:
+            return render_template('slug-input.html', error = True)
         session["project_id"] = project_info["id"]
-        if session["project_id"] == None:
-            return "Wrong slug input. Please try again."
+        
         return redirect('/sprint-selection')
 
     return render_template('slug-input.html')
@@ -81,8 +84,13 @@ def metric_selection():
         session['metric_selected'] = request.form.get('selectionOption')
         if session['metric_selected'] == "burndown":
             return redirect('/burndown-metric-parameter')
+
+        elif session['metric_selected'] == 'cycle_time':
+            return redirect('/cycle-time-graph')
+
         elif session['metric_selected'] == "lead_time":
             return redirect('/lead-time-graph')
+
 
     return render_template('metric-selection.html')
 
@@ -174,9 +182,8 @@ def get_business_value_by_user_story(user_story):
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
         return 'None'
-
-
-@app.route('/lead-time-graph', methods=['GET'])
+      
+@app.route('/lead-time-graph', methods=['GET'])      
 def lead_time_graph():
     if 'auth_token' not in session:
         return redirect('/')
@@ -184,5 +191,49 @@ def lead_time_graph():
     project_id = session['project_id']
     sprint_id = session['sprint_id']
     return get_lead_times_for_tasks(project_id, sprint_id, auth_token)
+
+
+#fetch data and calculate cycle time of tasks or user stories selected and display graph.
+#This is not average cycle time.
+@app.route('/cycle-time-graph', methods=['GET'])
+def cycle_time_graph_get():
+    if 'auth_token' not in session: 
+        return redirect('/')
+    #show users all the closed tasks in the selected sprint
+    sprint_name = "Sprint" + session["sprint_selected"]
+    sprint_id = get_milestone_id(session["project_id"], session["auth_token"], sprint_name)
+    closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(session["project_id"], sprint_id, session["auth_token"])
+    in_sprint_ids = [task["ref"] for task in closed_tasks_in_a_spirnt]
+    print("closed_tasks_in_a_spirnt: ")
+    print(in_sprint_ids)
+    return render_template('CycleTimeGraph.html', closed_tasks = in_sprint_ids)
+
+@app.route('/cycle-time-graph', methods=['POST'])
+def cycle_time_graph():
+    if 'auth_token' not in session: 
+        return redirect('/')
+    if request.method == 'POST':
+        
+        #The data should be sent by fetch and POST method in JSON format
+        closed_tasks_ids = request.json['closed_tasks_ids']
+        sprint_name = "Sprint" + session["sprint_selected"]
+        closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(session["project_id"], sprint_name, session["auth_token"])
+        #in_sprint_ids = [task["id"] for task in closed_tasks_in_a_spirnt]
+        #closed_tasks_ids = [id for id in closed_tasks_ids if id in in_sprint_ids]
+        #fetch data from taiga api
+        task_id_cycle_time = []
+        for task_id in closed_tasks_ids:
+            selected_task = get_one_closed_task(task_id, session["project_id"], session['auth_token'])
+            if selected_task != None:
+                cycle_time, closed_task_number = get_task_history(selected_task, session['auth_token'])
+                task_id_cycle_time.append(
+                    {
+                        "task_id": task_id,
+                        "cycle_time": cycle_time,
+                    }
+                )
+        #task_id_cycle_time = json.dumps(task_id_cycle_time)
+        #return render_template('CycleTimeGraph.html', task_id_cycle_time = task_id_cycle_time, task = in_sprint_ids)
+        return jsonify(task_id_cycle_time)
 
 
