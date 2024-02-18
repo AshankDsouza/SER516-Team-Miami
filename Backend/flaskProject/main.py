@@ -19,8 +19,8 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
 @app.route('/', methods=['GET', 'POST'])
-def loginPage():    
-    if 'auth_token' in session: 
+def loginPage():
+    if 'auth_token' in session:
         return redirect('/slug-input')
 
     if request.method == 'POST':
@@ -189,7 +189,8 @@ def lead_time_graph():
     auth_token = session['auth_token']
     project_id = session['project_id']
     sprint_id = session['sprint_id']
-    return get_lead_times_for_tasks(project_id, sprint_id, auth_token)
+    lead_times_for_sprint = get_lead_times_for_tasks(project_id, sprint_id, auth_token)
+    return render_template('lead-time-sprint-graph.html', lead_times_for_sprint=lead_times_for_sprint)
 
 
 #fetch data and calculate cycle time of tasks or user stories selected and display graph.
