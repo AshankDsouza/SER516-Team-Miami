@@ -45,12 +45,17 @@
         <section class="conatiner container-bg m-6 mt-0">
             <form method = "post" action = "/slug-input">
             <div class="slug-inp-grp">
+                {% if error %}
+                    <br>
+                    <p style="color: red">Wrong project slug.</p>
+                {% endif %}
                 <h3>Project Slug</h3>
                 <input lang="" type="text" class="form-control" id="slugInput" name="slugInput" >
                 <button type="submit" class="btn btn-light btn-m mt-3 slug-submit-btn">Submit</button>
             </div>
             </form>
         </section>
+
     </main>
 
 </body>
