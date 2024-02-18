@@ -13,6 +13,8 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
             crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
         <!-- Custom CSS -->
         <link rel="stylesheet" href="../static/css/style_sprint.css">
     </head>
@@ -20,7 +22,7 @@
     <body>
         <header>
             <nav class="navbar bg-body-tertiary m-2 p-0 mt-1 mb-0">
-                <div class="container-fluid p-4">
+                <div class="container-fluid">
                     <div class="logo-container d-flex flex-row align-items-center">
                         <a class="navbar-brand" href="#">
                             <img src="../static/img/team-miaim-logo.jpeg" alt="Logo" width="50" height="44"
@@ -40,48 +42,82 @@
             </nav>
         </header>
 
-        <main class="m-2 slug-inp-container container-bg">
-            <section class="container container-bg m-6 mt-0">
-                <div class="options-container p-4">
-                    <h3>Select an Metric</h3>
-                    <form method="post" action="/sprint-selection" class="d-flex justify-content-between">
-                        <!-- Radio Buttons -->
-                        <!-- Repeat the structure below for options 1 through 9 -->
-                        <div class="scroll-bar-container">
-                        {% for i in range(1, total_sprints+1) %}
-                        <div class="mb-3 form-check card text-center d-flex align-items-center justify-content-center select-card" >
-                            <input type="radio" class="form-check-input hide" id="option{{i}}" name="selectionOption" value="{{i}}">
-                            <label class="form-check-label" for="option{{i}}">Sprint {{i}}</label>
-                        </div>
-                        {% endfor %}
-                        </div>
-                       
-                        <button type="submit" class="btn btn-light btn-m mt-3 slug-submit-btn next-button">Next</button>
-                    </form>
-                </div>
-            </section>
+        <section class="flex-box">
+            <div class="flex-items">
+                <h3>Select the sprint you want the metric to be applied to</h3>
+                <form method="post" action="/sprint-selection" class="d-flex justify-content-between">
+                    <!-- Radio Buttons -->
+                    <!-- Repeat the structure below for options 1 through 9 -->
+                    <div class="scroll-bar-container">
+                    {% for i in range(1, total_sprints+1) %}
+                    <div class="form-check  d-flex align-items-center justify-content-center select-card" >
+                        <input type="radio" class="form-check-input hide" id="option{{i}}" name="selectionOption" value="{{i}}">
+                        <label class="form-check-label" for="option{{i}}">Sprint {{i}}</label>
+                    </div>
+                    {% endfor %}
 
-            <script>
-                window.onload = function() {
-                    var radioButtons = document.querySelectorAll('.form-check-input');
-                    radioButtons.forEach(function(radioButton) {
-                        radioButton.addEventListener('change', function() {
-                            document.querySelectorAll('.select-card').forEach(function(card) {
-                                card.style.backgroundColor = '';
-                            });
-                        if (this.checked) {
-                            this.parentElement.style.backgroundColor = '#f7bf51';
-                        }
-                        });
-                    });
-                };
-                
-                document.getElementById('log-out-btn').addEventListener('click', function() {
-                    window.location.href = '/logout';
-                });
-            </script>
-        </main>
+                    {% for i in range(1, total_sprints+1) %}
+                    <div class="form-check  d-flex align-items-center justify-content-center select-card" >
+                        <input type="radio" class="form-check-input hide" id="option{{i}}" name="selectionOption" value="{{i}}">
+                        <label class="form-check-label" for="option{{i}}">Sprint {{i}}</label>
+                    </div>
+                    {% endfor %}
+                    {% for i in range(1, total_sprints+1) %}
+                    <div class="form-check  d-flex align-items-center justify-content-center select-card" >
+                        <input type="radio" class="form-check-input hide" id="option{{i}}" name="selectionOption" value="{{i}}">
+                        <label class="form-check-label" for="option{{i}}">Sprint {{i}}</label>
+                    </div>
+                    {% endfor %}
+                    {% for i in range(1, total_sprints+1) %}
+                    <div class="form-check  d-flex align-items-center justify-content-center select-card" >
+                        <input type="radio" class="form-check-input hide" id="option{{i}}" name="selectionOption" value="{{i}}">
+                        <label class="form-check-label" for="option{{i}}">Sprint {{i}}</label>
+                    </div>
+                    {% endfor %}
+                    {% for i in range(1, total_sprints+1) %}
+                    <div class="form-check  d-flex align-items-center justify-content-center select-card" >
+                        <input type="radio" class="form-check-input hide" id="option{{i}}" name="selectionOption" value="{{i}}">
+                        <label class="form-check-label" for="option{{i}}">Sprint {{i}}</label>
+                    </div>
+                    {% endfor %}
+                    {% for i in range(1, total_sprints+1) %}
+                    <div class="form-check  d-flex align-items-center justify-content-center select-card" >
+                        <input type="radio" class="form-check-input hide" id="option{{i}}" name="selectionOption" value="{{i}}">
+                        <label class="form-check-label" for="option{{i}}">Sprint {{i}}</label>
+                    </div>
+                    {% endfor %}
+
+                    
+                    </div>
+                    <button type="submit" class="next-button"><i class="bi bi-arrow-right"></i></button>
+                </form>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <img src="../static/img/yellow-wave.png" alt="">
+        </footer>
 
     </body>
+
+    <script>
+        window.onload = function() {
+            var radioButtons = document.querySelectorAll('.form-check-input');
+            radioButtons.forEach(function(radioButton) {
+                radioButton.addEventListener('change', function() {
+                    document.querySelectorAll('.select-card').forEach(function(card) {
+                        card.style.backgroundColor = '';
+                    });
+                if (this.checked) {
+                    this.parentElement.style.backgroundColor = '#f7bf51';
+                }
+                });
+            });
+        };
+        
+        document.getElementById('log-out-btn').addEventListener('click', function() {
+            window.location.href = '/logout';
+        });
+    </script>
     
 </html>
