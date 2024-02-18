@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import os
 import json
 from datetime import datetime, timedelta
+
 from taigaApi.authenticate import authenticate
 from taigaApi.project.getProjectBySlug import get_project_by_slug
 from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
@@ -9,6 +10,8 @@ from taigaApi.userStory.getUserStory import get_user_story
 from taigaApi.task.getTaskHistory import get_task_history
 from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_closed_task, get_closed_tasks_for_a_sprint
 from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
+from Backend.taigaApi.task.getTasks import get_lead_times_for_tasks
+
 import secrets
 import requests
 
@@ -63,10 +66,11 @@ def sprint_selection():
     if 'auth_token' not in session: 
         return redirect('/')
 
-    total_sprints = get_number_of_milestones(session["project_id"], session['auth_token'])
+    sprintMapping, total_sprints = get_number_of_milestones(session["project_id"], session['auth_token'])
 
     if request.method == 'POST':
         session['sprint_selected'] = request.form.get('selectionOption')
+        session['sprint_id'] = sprintMapping[request.form.get('selectionOption')]
         return redirect('/metric-selection')
     
     return render_template('sprint-selection.html', total_sprints = total_sprints)
@@ -80,8 +84,13 @@ def metric_selection():
         session['metric_selected'] = request.form.get('selectionOption')
         if session['metric_selected'] == "burndown":
             return redirect('/burndown-metric-parameter')
+
         elif session['metric_selected'] == 'cycle_time':
             return redirect('/cycle-time-graph')
+
+        elif session['metric_selected'] == "lead_time":
+            return redirect('/lead-time-graph')
+
 
     return render_template('metric-selection.html')
 
@@ -173,6 +182,15 @@ def get_business_value_by_user_story(user_story):
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
         return 'None'
+      
+@app.route('/lead-time-graph', methods=['GET'])      
+def lead_time_graph():
+    if 'auth_token' not in session:
+        return redirect('/')
+    auth_token = session['auth_token']
+    project_id = session['project_id']
+    sprint_id = session['sprint_id']
+    return get_lead_times_for_tasks(project_id, sprint_id, auth_token)
 
 
 #fetch data and calculate cycle time of tasks or user stories selected and display graph.
@@ -217,4 +235,5 @@ def cycle_time_graph():
         #task_id_cycle_time = json.dumps(task_id_cycle_time)
         #return render_template('CycleTimeGraph.html', task_id_cycle_time = task_id_cycle_time, task = in_sprint_ids)
         return jsonify(task_id_cycle_time)
+
 
