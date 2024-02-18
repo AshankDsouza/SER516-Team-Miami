@@ -16,7 +16,13 @@ def get_number_of_milestones(project_id, auth_token):
         response = requests.get(project_api_url, headers=headers)
         response.raise_for_status()
         sprints = response.json()
-        return len(sprints)
+        sprintMapping = dict()
+        i = 1
+        for sprint in sprints:
+            sprintMapping[str(i)] = sprint['id']
+            i+=1
+
+        return sprintMapping,len(sprints)
     except requests.exceptions.RequestException as e:
         # Handle errors during the API request and print an error message
         print(f"Error fetching number of sprints: {e}")
