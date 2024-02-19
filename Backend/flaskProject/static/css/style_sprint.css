@@ -120,7 +120,7 @@ button.slug-submit-btn:hover{
 
 .next-button{
     text-transform: uppercase;
-    letter-spacing: 2px;
+    /* letter-spacing: 2px; */
     display: block;
     font-weight: bold;
     padding: 0.75rem;
@@ -169,7 +169,7 @@ button.slug-submit-btn:hover{
 }
 
 .scroll-bar-container {
-    overflow: scroll;
+    overflow: auto;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -198,16 +198,6 @@ button.slug-submit-btn:hover{
     padding: 0.75rem;
 }
 
-.flex-box .flex-items h3::after{
-    content:" ";
-    height: 0.25rem;
-    width: 13rem;
-    background: #f7bf51;
-    display: block;
-    position: absolute;
-    top: 50%;
-    right: 25%;
-}
 
 .form-check{
     padding-left: 0;

@@ -50,6 +50,9 @@ def slug_input():
     if request.method == 'POST':
         project_slug = request.form['slugInput']
         project_info = get_project_by_slug(project_slug, session['auth_token'])
+        
+        
+        
         session["project_id"] = project_info["id"]
         if session["project_id"] == None:
             return "Wrong slug input. Please try again."
