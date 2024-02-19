@@ -42,7 +42,7 @@ def get_task_history(tasks, auth_token):
                 in_progress_date = datetime.fromisoformat(str(in_progress_date)[:-6])
 
                 # Calculate cycle time and increment closed_tasks count
-                cycle_time += (finished_date - in_progress_date).days
+                cycle_time += (finished_date - in_progress_date).days + (finished_date - in_progress_date).seconds /86400
                 closed_tasks += 1
 
         except requests.exceptions.RequestException as e:

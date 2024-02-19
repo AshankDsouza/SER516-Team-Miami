@@ -90,8 +90,7 @@ def get_one_closed_task(task_id, project_id, auth_token):
     if closed_tasks:
         #Find the task with the given ID in closed tasks
         for task in closed_tasks:
-            print(task["id"])
-            print(task["ref"])
+           
             if task["ref"] == task_id:
                 result = [task] #get_task_history(taks, auth_token) require a list of tasks
                 return result

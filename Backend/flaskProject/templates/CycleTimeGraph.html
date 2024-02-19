@@ -65,7 +65,7 @@
     <div class="container"> 
         <form class="text-center" id = "task_selection">
             <label for = "task_ids"><h3>Task ids (separeted by ", ") </h3></label>
-            <input type="text" id="task_ids" name="task_ids" placeholder="1, 2, 3" required>
+            <input type="text" id="task_ids" name="task_ids" value="{{ closed_tasks|join(', ')}}" required>
             <button type="submit" class="btn btn-light btn-m mt-3 slug-submit-btn">Submit</button>
         </form>
 
