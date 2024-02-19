@@ -11,7 +11,7 @@ REM Install the required packages
 pip install -r requirements.txt
 
 REM Run the application
-cd Backend\flaskProject
+cd Backend
 
 echo TAIGA_URL=https://api.taiga.io/api/v1 > .env
 
