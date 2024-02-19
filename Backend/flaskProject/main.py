@@ -310,7 +310,7 @@ def partial_work_done_chart(project_id, sprint_id):
 
             task_finished_date = None
             if(task["status_extra_info"]["is_closed"]): 
-                task_finished_date = datetime.strptime(task["finished_date"], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d %b %Y")
+                task_finished_date = datetime.fromisoformat(task["finished_date"]).strftime("%d %b %Y")
 
             processing_user_stories[task["user_story"]]["tasks"].append({
                 "closed": task["status_extra_info"]["is_closed"],
@@ -416,15 +416,14 @@ def total_work_done_chart(project_id, sprint_id):
 
             total_points_completed = 0
             for user_story in milestone["user_stories"]:
-                if(user_story["finish_date"] == None):
+                if(user_story["finish_date"] == None or user_story["total_points"] == None):
                     continue
 
-                finish_date = datetime.strptime(user_story["finish_date"], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d %b %Y")
+                finish_date = datetime.fromisoformat(user_story["finish_date"]).strftime("%d %b %Y")
                     
                 if(finish_date != current_processing_date):
                     continue
 
-                print("US completed: ", round(current_processing_date_points - user_story["total_points"], 1))
                 total_points_completed = user_story["total_points"] + total_points_completed
 
             data_to_plot["actual_projection"].append(round(current_processing_date_points - total_points_completed, 1))
