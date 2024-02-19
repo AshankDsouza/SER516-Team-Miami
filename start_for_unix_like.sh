@@ -13,6 +13,8 @@ pip install -r requirements.txt
 #Go to the flaskProject folder
 cd Backend/flaskProject
 
+echo "TAIGA_URL=https://api.taiga.io/api/v1" > .env
+
 #Run the flask app
 flask --app main run
 
