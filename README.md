@@ -4,45 +4,27 @@
 
 This project is built using python for interacting with the Taiga API to perform various task and calculating metrics.
 
-## Prerequisites
-
-Before running the script, make sure you have the following installed:
-
-- Python 3
-- Required Python packages (install using `pip install -r requirements.txt`)
-- Taiga account with API access
-- Taiga project slug
-
-## Setup
-
-1. Clone the repository:
+## Clone the repository:
 
    ```bash
-   git clone https://github.com/ser516asu/SER516-Team-Miami.git
+   git clone git@github.com:keer-asu/SER516-Team-Miami.git
    cd SER516-Team-Miami
    ```
 
-2. Create a .env file in the project root and add the following:
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+## Build and run instructions
+1. After cloning the repo, in the root folder:
 
-3. Migrate to backend folder by executing the following command:
-
-    ```bash
-    cd Backend
-    ```
-    
-4. Create a .env file is the root folder and copy paste the following below code in it:
-
-    TAIGA_URL=https://api.taiga.io/api/v1
-   
-5. Run the script:
-
+   On Mac or linux machines, run this command:
    ```bash
-   flask --app Backend/flaskProject/main run
-    ```
+   sh start_for_unix_like.sh
+   ```
+   
+   On Windows machines, run this command:
+   ```bash
+   start_for_windows.bat
+   ```
+
 
 ## Getting Taiga Project Slug
 
