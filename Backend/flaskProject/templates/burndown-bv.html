@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>login page</title>
+    <title>burndown chart</title>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
@@ -28,7 +28,7 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="chart-container">
-                            <canvas id="burndown_bv"></canvas>
+                            <canvas id="burndown_bv" style="height:70vh;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -44,7 +44,6 @@
             url: '/burndown-bv-data',
             type: 'GET',
             success: function (response) {
-                console.log(response)
                 new Chart($('#burndown_bv'), {
                     type: 'line',
                     data: {
@@ -61,6 +60,7 @@
                         ]
                     },
                     options: {
+                        responsive: true,
                         scales: {
                             x: {
                                 title: {

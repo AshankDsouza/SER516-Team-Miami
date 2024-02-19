@@ -99,8 +99,10 @@ def burndown_metric_parameter():
         return redirect('/')
     
     if request.method == 'POST':
-        parameter = request.form.get('parameter')
-        return redirect('/burndown-metric_configuration') #just a placeholder
+        parameter = request.form.get('workOption')
+        if parameter == 'businessValues':
+            return redirect('/burndown-bv')
+        return redirect('/burndown-metric_configuration')  #just a placeholder
 
     return render_template('burndown-metric_configuration.html')
 
@@ -176,6 +178,8 @@ def get_business_value_by_user_story(user_story):
         response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
         # Extracting information from the response
         business_value_res = response.json()
+        if "40198" not in business_value_res['attributes_values']:
+            business_value_res["attributes_values"]["40198"] = 0
         return business_value_res["attributes_values"]["40198"]
     except requests.exceptions.RequestException as e:
         # Handle errors during the API request and print an error message
