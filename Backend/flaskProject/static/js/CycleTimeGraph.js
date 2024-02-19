@@ -2,10 +2,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Data for the chart
     var data = {
-        labels: ['Task 1', 'Task 2', 'Task 3', 'Task 4', 'Task 5'], // Sample labels for tasks
+        labels: [], // Sample labels for tasks
         datasets: [{
             label: 'Task Cycle Time',
-            data: [8, 12, 10, 14, 18], // Sample data for Task Cycle Time
+            data: [], // Sample data for Task Cycle Time
             backgroundColor: 'rgba(54, 162, 235, 0.2)', // Blue color for Task Cycle Time
             borderColor: 'rgba(54, 162, 235, 1)', // Border color for Task Cycle Time
             borderWidth: 1
@@ -35,7 +35,11 @@ document.addEventListener('DOMContentLoaded', function() {
         options: options
     });
 
+
+
     document.getElementById('task_selection').addEventListener('submit', sendData);
+
+    sendData({ preventDefault: function(){} });
 
     function sendData(event) {
         event.preventDefault();
