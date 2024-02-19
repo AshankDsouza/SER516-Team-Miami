@@ -42,14 +42,17 @@
     </header>
 
     <main class="m-2 slug-inp-container container-bg">
+        <section class="alert-container" id="liveAlertContainer">
+        </section>
         <section class="conatiner container-bg m-6 mt-0">
             <div class="slug-inp-grp">
                 <h3>Project Slug</h3>
                 <input lang="" type="text" class="form-control" id="slugInput" >
-                <button type="button" class="btn btn-light btn-m mt-3 slug-submit-btn">Submit</button>
+                <button type="button" class="btn btn-light btn-m mt-3 slug-submit-btn" onclick="appendAlert('Nice, you triggered this alert message!', 'danger')">Submit</button>
             </div>
         </section>
     </main>
 
 </body>
+<script src="./js/slug-input.js"></script>
 </html>

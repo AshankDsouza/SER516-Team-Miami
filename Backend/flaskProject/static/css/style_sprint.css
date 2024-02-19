@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
 *,
 *::after,
 *::before,
@@ -11,26 +13,15 @@ p {
 *,
 *::after,
 *::before {
-    font-family: "Protest Riot", sans-serif;
+    font-family: "Roboto", sans-serif;
     font-weight: 400;
     font-style: normal;
-    /* outline: 1px solid red; */
 }
 
 body{
     display: flex;
     flex-direction: column;
     height: 100vh;
-}
-
-section.container-bg,
-main.container-bg{
-    border-radius: 15px;
-}
-
-section.container-bg,
-.container-bg{
-    background-color: rgba(223, 223, 223, 0.9) !important;
 }
 
 .navbar .container-fluid {
@@ -40,11 +31,21 @@ section.container-bg,
 
 .logo-name {
     font-size: 2rem;
+    font-family: "Caveat", cursive;
 }
 
 .log-out-conatiner {
     --c: #f7bf51;
-
+    border-radius: 0.5rem;
+    cursor: pointer;
+    padding: 0.65rem 3rem;
+    margin: 1.25rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 1.4rem;
+    margin: auto;
+    display: block;
     color: #000;
     background:
         linear-gradient(90deg, #fff 50%, var(--c) 0) calc(100% - var(--_p, 0%))/200% 100%,
@@ -65,6 +66,7 @@ section.container-bg,
 .log-out-text {
     font-size: 1.4rem;
     display: inline-block;
+    font-weight: bold;
 }
 
 .slug-inp-container{
@@ -88,9 +90,10 @@ button.slug-submit-btn{
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 1.4rem;
-    margin: auto;
     display: block;
-
+    font-weight: bold;
+    padding: 0.65rem 3rem;
+    margin: 1.25rem;
     --c: #f7bf51;
 
     color: #000;
@@ -115,37 +118,106 @@ button.slug-submit-btn:hover{
     overflow: scroll;
 }
 
-/* .alert-container .alert-placeholder{
-    position: absolute;
-    top: 0;
-
-} */
-
 .next-button{
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: block;
+    font-weight: bold;
+    padding: 0.75rem;
+    margin: 0.5rem;
     position: fixed;
-    bottom: 10%;
-    right: 5%;
+    bottom: 2%;
+    right: 1%;
+    background-color: #1f1f1fd7;
+    color: white;
+    border-radius: 50%;
+}
+
+.next-button:hover{
+    background-color: #f7bf51;
+    color: black;
+}
+
+.next-button i::before{
+    font-size: 2rem;
 }
 
 .hide{
     display: none;
-    position:absolute;
+    position: absolute;
 }
 
-.form-check-label{
+.select-card label{
+    width: 16rem; 
+    height: 11rem;
+    border: 1px solid #1f1f1f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     font-size: 2rem;
-    position: left;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 0.75rem;
 }
 
-.select-card {
-    width: 20rem; 
-    height: 8rem;
+.form-check.d-flex.align-items-center.justify-content-center.select-card{
+    border-radius: 0.75rem;
+}
+.select-card label:hover{
+    background-color: #f7bf51;
+    border-radius: 0.75rem;
 }
 
-.scroll-bar-contianer {
-    max-height: 30vh;
+.scroll-bar-container {
     overflow: scroll;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
+    align-items: center;
+    gap: 2rem;
+    margin: 0.75rem;
+    padding: 0.75rem;
+}
+
+.flex-box{
+    display: flex;
+    flex: 1;
+    direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0.75rem;
+    padding: 0.75rem;
+}
+
+.flex-box .flex-items h3{
+    font-size: 2rem;
+    text-transform: capitalize;
+    letter-spacing: 0.05rem;
+    position: relative;
+    margin: 0.75rem;
+    padding: 0.75rem;
+}
+
+.flex-box .flex-items h3::after{
+    content:" ";
+    height: 0.25rem;
+    width: 13rem;
+    background: #f7bf51;
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 25%;
+}
+
+.form-check{
+    padding-left: 0;
+}
+
+.footer{
+    width: 100vw;
+}
+
+.footer img{
+    width: 100%;
+    height: 25rem;
 }
