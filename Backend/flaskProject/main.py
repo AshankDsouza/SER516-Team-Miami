@@ -11,7 +11,7 @@ from taigaApi.task.getTaskHistory import get_task_history
 from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_closed_task, get_tasks, get_closed_tasks_for_a_sprint
 from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
 from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint
-from Backend.taigaApi.task.getTasks import get_lead_times_for_tasks
+from taigaApi.task.getTasks import get_lead_times_for_tasks
 import secrets
 import requests
 
@@ -31,7 +31,7 @@ def loginPage():
             session['auth_token'] = auth_token
             return redirect('/slug-input')
         else:
-            session['auth_token'] = None
+            # session['auth_token'] = None
             return render_template('login2.html', error = True)
         
     return render_template('login2.html', error = False)
@@ -100,8 +100,10 @@ def burndown_metric_parameter():
         return redirect('/')
     
     if request.method == 'POST':
-        parameter = request.form.get('parameter')
-        return redirect('/burndown-metric_configuration') #just a placeholder
+        parameter = request.form.get('workOption')
+        if parameter == 'businessValues':
+            return redirect('/burndown-bv')
+        return redirect('/burndown-metric_configuration')  #just a placeholder
 
     return render_template('burndown-metric_configuration.html')
 
@@ -177,6 +179,8 @@ def get_business_value_by_user_story(user_story):
         response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
         # Extracting information from the response
         business_value_res = response.json()
+        if "40198" not in business_value_res['attributes_values']:
+            business_value_res["attributes_values"]["40198"] = 0
         return business_value_res["attributes_values"]["40198"]
     except requests.exceptions.RequestException as e:
         # Handle errors during the API request and print an error message
@@ -447,12 +451,13 @@ def get_burndown_bv_data():
         # get all user stories data
         user_stories = get_user_story(session["project_id"], session["auth_token"])
         # use each user stories id to get bv and check if done
-        bv_per_date = [0] * 21
+        bv_per_date = [0] * 30
         for idx, val in enumerate(user_stories):
             ## Sprint1 filter
             if val["milestone_name"] == "Sprint1":
                 bv = int(get_business_value_by_user_story(val["id"]))
                 if val["status_extra_info"]["name"] == "Done":
+                    # print(val)
                     ## Jan filter
                     if val["finish_date"][5:7] == "01":
                         ## convert date to index
