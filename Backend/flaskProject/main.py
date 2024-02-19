@@ -51,6 +51,7 @@ def slug_input():
     if request.method == 'POST':
         project_slug = request.form['slugInput']
         project_info = get_project_by_slug(project_slug, session['auth_token'])
+
         if project_info == None:
             return render_template('slug-input.html', error = True)
         session["project_id"] = project_info["id"]
