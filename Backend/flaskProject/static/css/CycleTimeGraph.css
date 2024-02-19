@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
-
 *,
 *::after,
 *::before,
@@ -7,14 +5,16 @@ p {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
+    font-size: 1rem;
 }
 
 *,
 *::after,
 *::before {
-    font-family: "Roboto", sans-serif;
+    font-family: "Protest Riot", sans-serif;
     font-weight: 400;
     font-style: normal;
+    /* outline: 1px solid red; */
 }
 
 body{
@@ -28,34 +28,23 @@ main.container-bg{
     border-radius: 15px;
 }
 
+section.container-bg,
+.container-bg{
+    background-color: rgba(223, 223, 223, 0.9) !important;
+}
+
 .navbar .container-fluid {
     border-radius: 15px;
     background-color: rgba(223, 223, 223, 0.9) !important;
 }
 
-.navbar-brand img{
-    width: 3rem;
-    height: 3rem;
-    margin-left: 1rem;
-}
-
 .logo-name {
     font-size: 2rem;
-    font-family: "Caveat", cursive;
 }
 
 .log-out-conatiner {
     --c: #f7bf51;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    padding: 0.65rem 3rem;
-    margin: 1.25rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: 1.4rem;
-    margin: auto;
-    display: block;
+
     color: #000;
     background:
         linear-gradient(90deg, #fff 50%, var(--c) 0) calc(100% - var(--_p, 0%))/200% 100%,
@@ -76,7 +65,6 @@ main.container-bg{
 .log-out-text {
     font-size: 1.4rem;
     display: inline-block;
-    font-weight: bold;
 }
 
 .slug-inp-container{
@@ -84,19 +72,10 @@ main.container-bg{
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: -5rem;
 }
 
-.slug-inp-container .conatiner{
-    height: 50vh;
-}
 .slug-inp-grp{
     margin: auto 25%;
-}
-
-.slug-inp-grp h3{
-    margin: 0.75rem;
-    padding: 0.75rem;
 }
 
 .slug-inp-grp input{
@@ -105,23 +84,15 @@ main.container-bg{
     font-weight: 100;
 }
 
-.slug-inp-container{
-    display: flex;
-    flex: 1;
-}
-
 button.slug-submit-btn{
-    border-radius: 0.5rem;
-    cursor: pointer;
-    padding: 0.65rem 3rem;
-    margin: 1.25rem;
-    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 1.4rem;
     margin: auto;
     display: block;
+
     --c: #f7bf51;
+
     color: #000;
     background:
         linear-gradient(90deg, #fff 50%, var(--c) 0) calc(100% - var(--_p, 0%))/200% 100%,
@@ -135,10 +106,6 @@ button.slug-submit-btn:hover{
     --_p: 100%;
 }
 
-main{
-    z-index: 2;
-}
-
 .alert-container{
     position: absolute;
     top: 10px;
@@ -148,13 +115,53 @@ main{
     overflow: scroll;
 }
 
-.footer{
-    width: 100vw;
-    bottom: 0;
+/* .alert-container .alert-placeholder{
+    position: absolute;
+    top: 0;
+
+} */
+
+.next-button{
+    position: fixed;
+    bottom: 10%;
+    right: 5%;
 }
 
-.footer img{
-    width: 100%;
-    height: 30vh;
+.hide{
+    display: none;
+    position:absolute;
 }
 
+.form-check-label{
+    font-size: 2rem;
+    position: left;
+}
+
+.select-card {
+    width: 20rem; 
+    height: 8rem;
+}
+
+.scroll-bar-contianer {
+    max-height: 30vh;
+    overflow: scroll;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.graph-container {
+    width: 750px;
+    height: 426px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+}
+
+#line-graph {
+    width: 50%;
+    height: 50%;
+}
+
+h1.text-center {
+    margin-top: 20px; 
+}
