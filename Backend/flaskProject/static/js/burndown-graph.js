@@ -122,5 +122,56 @@ async function getGraphData(){
     }
 }
 
+$(function () {
+    $.ajax({
+        url: '/burndown-bv-data',
+        type: 'GET',
+        success: function (response) {
+            new Chart($('#business-value-chart'), {
+                type: 'line',
+                data: {
+                    labels: ['29 Jan', '30 Jan', '31 Jan', '01 Feb', '02 Feb', '03 Feb', '04 Feb',
+                        '05 Feb', '06 Feb', '07 Feb', '08 Feb', '09 Feb', '10 Feb', '11 Feb',
+                        '12 Feb', '13 Feb', '14 Feb', '15 Feb', '16 Feb', '17 Feb', '18 Feb'],
+                    datasets: [
+                        {
+                            label: 'Business Value Delivered by Date',
+                            data: response,
+                            borderColor: '#ff0000',
+                            backgroundColor: '#ff008c',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                font: { size: 15 },
+                            },
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'BV',
+                                font: { size: 15 },
+                            },
+
+                        }
+                    },
+                }
+            })
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            console.log(XMLHttpRequest.status)
+            console.log(textStatus)
+        }
+    })
+})
+
+
 getGraphData();
 
