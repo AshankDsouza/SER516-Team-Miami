@@ -52,7 +52,8 @@ def get_closed_tasks(project_id, auth_token):
                 "id": task["id"],
                 "subject": task["subject"],
                 "created_date": task["created_date"],
-                "finished_date": task["finished_date"]
+                "finished_date": task["finished_date"],
+                "ref": task["ref"]
             }
             for task in tasks if task.get("is_closed")
         ]
@@ -103,6 +104,47 @@ def get_all_tasks(project_id, auth_token):
         return all_tasks
     else:
         return None
+    
+# Function to retrieve a closed task by ID
+def get_one_closed_task(task_id, project_id, auth_token):
+    # to get all the tasks
+    closed_tasks = get_closed_tasks(project_id, auth_token)
+    if closed_tasks:
+        #Find the task with the given ID in closed tasks
+        for task in closed_tasks:
+            print(task["id"])
+            print(task["ref"])
+            if task["ref"] == task_id:
+                result = [task] #get_task_history(taks, auth_token) require a list of tasks
+                return result
+    return None
+
+
+def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
+
+    # Call the get_tasks function to retrieve all tasks for the project
+    tasks = get_tasks(project_id, auth_token)
+    if tasks:
+
+        # Filter tasks to include only closed tasks and format the result
+        closed_tasks = [
+            {
+                "id": task["id"],
+                "subject": task["subject"],
+                "created_date": task["created_date"],
+                "finished_date": task["finished_date"],
+                "ref": task["ref"]
+            }
+            for task in tasks if task.get("is_closed") and task['milestone'] == sprint_id
+        ]
+
+        return closed_tasks
+    else:
+        return None         
+
+
+
+    
 
 
 def get_lead_times_for_tasks(project_id, sprint_id, auth_token):
