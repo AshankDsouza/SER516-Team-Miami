@@ -31,7 +31,6 @@ def loginPage():
             session['auth_token'] = auth_token
             return redirect('/slug-input')
         else:
-
             return render_template('login2.html', error = True)
         
     return render_template('login2.html', error = False)
@@ -65,12 +64,19 @@ def slug_input():
 def sprint_selection():
     if 'auth_token' not in session: 
         return redirect('/')
+    
+    if 'project_id' not in session: 
+        return redirect('/slug-input')
 
     sprintMapping, total_sprints = get_number_of_milestones(session["project_id"], session['auth_token'])
 
     if request.method == 'POST':
         session['sprint_selected'] = request.form.get('selectionOption')
-        session['sprint_id'] = sprintMapping[request.form.get('selectionOption')]
+        # TODO: Bug fix (sprint mapping)
+        session['sprint_id'] = sprintMapping[str(len(sprintMapping) - int(request.form.get('selectionOption')) + 1)]
+        print("\n\n")
+        print(json.dumps(sprintMapping, indent=2))
+        print("\n\n")
         return redirect('/metric-selection')
     
     return render_template('sprint-selection.html', total_sprints = total_sprints)
@@ -83,7 +89,7 @@ def metric_selection():
     if request.method == 'POST':
         session['metric_selected'] = request.form.get('selectionOption')
         if session['metric_selected'] == "burndown":
-            return redirect('/burndown-metric-parameter')
+            return redirect('/burndown-graph')
 
         elif session['metric_selected'] == 'cycle_time':
             return redirect('/cycle-time-graph')
@@ -91,9 +97,23 @@ def metric_selection():
         elif session['metric_selected'] == "lead_time":
             return redirect('/lead-time-graph')
 
-
     return render_template('metric-selection.html')
 
+@app.route('/burndown-graph', methods=['GET'])
+def burndown_graph():
+    if 'auth_token' not in session: 
+        return redirect('/')
+    
+    if 'sprint_selected' not in session:
+        return redirect('/sprint-selection')
+    
+    if 'metric_selected' not in session:
+        return redirect('/metric-selection')
+    
+    return render_template('burndown-graph.html')
+
+
+# TODO: Depricated (Endpoint not in use)
 @app.route('/burndown-metric-parameter', methods=['GET', 'POST'])
 def burndown_metric_parameter():
     if 'auth_token' not in session: 
@@ -107,8 +127,7 @@ def burndown_metric_parameter():
 
     return render_template('burndown-metric_configuration.html')
 
-
-
+# TODO: Depricated (Endpoint not in use)
 @app.route('/work-done-chart', methods=['GET'])
 def work_done_chart():
     if 'auth_token' not in session: 
@@ -237,14 +256,20 @@ def cycle_time_graph():
         return jsonify(task_id_cycle_time)
 
 
-@app.route('/<project_id>/<sprint_id>/partial-work-done-chart', methods=['GET'])
-def partial_work_done_chart(project_id, sprint_id):
+@app.route('/partial-work-done-chart', methods=['GET'])
+def partial_work_done_chart():
     # If user is not log`ged in redirect to login page
     if 'auth_token' not in session: 
         return redirect('/')
     
     # Fetching the auth token from session
     auth_token = session['auth_token']
+
+    if 'project_id' in session:
+        project_id = session['project_id']
+
+    if 'sprint_id' in session:
+        sprint_id = session['sprint_id']
 
     # Throwing error if the user has submitted project_id or sprint_id
     if((not project_id) or (not sprint_id)):
@@ -349,14 +374,21 @@ def partial_work_done_chart(project_id, sprint_id):
         print(e)
         return redirect('/error')
     
-@app.route('/<project_id>/<sprint_id>/total-work-done-chart', methods=['GET'])
-def total_work_done_chart(project_id, sprint_id):
+@app.route('/total-work-done-chart', methods=['GET'])
+def total_work_done_chart():
     # If user is not log`ged in redirect to login page
     if 'auth_token' not in session: 
         return redirect('/')
     
     # Fetching the auth token from session
     auth_token = session['auth_token']
+
+    # TODO: Bug fix (redirect)
+    if 'project_id' in session:
+        project_id = session['project_id']
+
+    if 'sprint_id' in session:
+        sprint_id = session['sprint_id']
 
     # Throwing error if the user has submitted project_id or sprint_id
     if((not project_id) or (not sprint_id)):
