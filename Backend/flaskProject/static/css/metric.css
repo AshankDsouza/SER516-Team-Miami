@@ -22,6 +22,7 @@ body{
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow-x: hidden;
 }
 
 .navbar .container-fluid {
@@ -168,7 +169,7 @@ button.slug-submit-btn:hover{
 }
 
 .scroll-bar-container {
-    overflow: scroll;
+    overflow-x: hidden;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
