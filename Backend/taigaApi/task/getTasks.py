@@ -74,7 +74,8 @@ def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
                 "id": task["id"],
                 "subject": task["subject"],
                 "created_date": task["created_date"],
-                "finished_date": task["finished_date"]
+                "finished_date": task["finished_date"],
+                "ref": task["ref"]
             }
             for task in tasks if task.get("is_closed") and task['milestone'] == sprint_id
         ]

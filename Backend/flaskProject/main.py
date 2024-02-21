@@ -237,22 +237,22 @@ def cycle_time_graph():
     if request.method == 'POST':
         #The data should be sent by fetch and POST method in JSON format
         closed_tasks_ids = request.json['closed_tasks_ids']
-        sprint_name = "Sprint" + session["sprint_selected"]
-        closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(session["project_id"], sprint_name, session["auth_token"])
+        closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(session["project_id"], session["sprint_id"], session["auth_token"])
+        closed_tasks_selected = [task for task in closed_tasks_in_a_spirnt if task["ref"] in closed_tasks_ids]
         #fetch data from taiga api
         task_id_cycle_time = []
-        for task_id in closed_tasks_ids:
-            selected_task = get_one_closed_task(task_id, session["project_id"], session['auth_token'])
-            if selected_task != None:
-                cycle_time, closed_task_number = get_task_history(selected_task, session['auth_token'])
+        if (closed_tasks_selected != None):
+            for task in closed_tasks_selected:
+                task_list = [task] #get_task_history only takes a list of tasks
+                cycle_time, closed_task_number = get_task_history(task_list, session['auth_token'])
                 task_id_cycle_time.append(
                     {
-                        "task_id": task_id,
+                        "task_id": task["ref"],
                         "cycle_time": cycle_time,
                     }
                 )
-        #task_id_cycle_time = json.dumps(task_id_cycle_time)
-        #return render_template('CycleTimeGraph.html', task_id_cycle_time = task_id_cycle_time, task = in_sprint_ids)
+                print(task_id_cycle_time)
+
         return jsonify(task_id_cycle_time)
 
 
