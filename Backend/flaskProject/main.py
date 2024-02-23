@@ -14,6 +14,7 @@ from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint
 from taigaApi.task.getTasks import get_lead_times_for_tasks
 import secrets
 import requests
+from threading import Thread
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -224,11 +225,8 @@ def cycle_time_graph_get():
     if 'auth_token' not in session: 
         return redirect('/')
     #show users all the closed tasks in the selected sprint
-    sprint_name = "Sprint" + session["sprint_selected"]
-    sprint_id = get_milestone_id(session["project_id"], session["auth_token"], sprint_name)
-    closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(session["project_id"], sprint_id, session["auth_token"])
-    in_sprint_ids = [task["ref"] for task in closed_tasks_in_a_spirnt]
-    return render_template('CycleTimeGraph.html', closed_tasks = in_sprint_ids)
+    
+    return render_template('CycleTimeGraph.html')
 
 @app.route('/cycle-time-graph', methods=['POST'])
 def cycle_time_graph():
@@ -237,8 +235,12 @@ def cycle_time_graph():
     if request.method == 'POST':
         #The data should be sent by fetch and POST method in JSON format
         closed_tasks_ids = request.json['closed_tasks_ids']
-        closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(session["project_id"], session["sprint_id"], session["auth_token"])
-        closed_tasks_selected = [task for task in closed_tasks_in_a_spirnt if task["ref"] in closed_tasks_ids]
+        closed_tasks_selected = []
+        if closed_tasks_ids == [0]:
+            closed_tasks_selected = get_closed_tasks_for_a_sprint(session["project_id"], session['sprint_id'], session["auth_token"])
+            session["closed_tasks_in_a_sprint"] = closed_tasks_selected
+        else:
+            closed_tasks_selected = [task for task in session["closed_tasks_in_a_sprint"] if task["ref"] in closed_tasks_ids]
         #fetch data from taiga api
         task_id_cycle_time = []
         if (closed_tasks_selected != None):

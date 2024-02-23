@@ -13,8 +13,18 @@ def get_tasks(project_id, auth_token):
     # Get Taiga API URL from environment variables
     taiga_url = os.getenv('TAIGA_URL')
 
-    # Construct the URL for the tasks API endpoint for the specified project
-    task_api_url = f"{taiga_url}/tasks?project={project_id}"
+    milestones = get_milestones_for_project(project_id, auth_token)
+    userstories = get_userstories_for_milestones(milestones, auth_token)
+    tasks = get_tasks_for_userstories(userstories, auth_token)
+    return tasks
+
+
+def get_milestones_for_project(project_id, auth_token):
+    # Get Taiga API URL from environment variables
+    taiga_url = os.getenv('TAIGA_URL')
+
+    # Construct the URL for the projects API endpoint for the project
+    projects_api_url = f"{taiga_url}/projects/{project_id}"
 
     # Define headers including the authorization token and content type
     headers = {
@@ -25,18 +35,78 @@ def get_tasks(project_id, auth_token):
     try:
 
         # Make a GET request to Taiga API to retrieve tasks
-        response = requests.get(task_api_url, headers=headers)
+        response = requests.get(projects_api_url, headers=headers)
         response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
 
-        # Extract and return the tasks information from the response
-        project_info = response.json()
-        return project_info
+        # Extract and return the milestoneIds information from the response
+        get_milestone_ids = lambda milestones=response.json()["milestones"] : [milestone["id"] for milestone in milestones]
+        milestone_ids = get_milestone_ids()
+        return milestone_ids
 
     except requests.exceptions.RequestException as e:
 
         # Handle errors during the API request and print an error message
         print(f"Error fetching tasks: {e}")
         return None
+
+def get_userstories_for_milestones(milestones, auth_token):
+    # Get Taiga API URL from environment variables
+    taiga_url = os.getenv('TAIGA_URL')
+
+    # Construct the URL for the userstories API endpoint for the specified milestone
+    milestones_api_url = f"{taiga_url}/userstories?milestone="
+
+    # Define headers including the authorization token and content type
+    headers = {
+        'Authorization': f'Bearer {auth_token}',
+        'Content-Type': 'application/json',
+    }
+    userstory_ids = []
+    for milestone in milestones:
+        try:
+
+            # Make a GET request to Taiga API to retrieve tasks
+            response = requests.get(milestones_api_url+str(milestone), headers=headers)
+            response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+
+            # Extract and return the userstory ids information from the response
+            get_userstory_ids = lambda userstories=response.json(): [userstory["id"] for userstory in userstories]
+            userstory_ids += get_userstory_ids()
+
+        except requests.exceptions.RequestException as e:
+
+            # Handle errors during the API request and print an error message
+            print(f"Error fetching tasks: {e}")
+    return userstory_ids
+
+def get_tasks_for_userstories(userstories, auth_token):
+    # Get Taiga API URL from environment variables
+    taiga_url = os.getenv('TAIGA_URL')
+
+    # Construct the URL for the tasks API endpoint for the specified user story
+    tasks_api_url = f"{taiga_url}/tasks?user_story="
+
+    # Define headers including the authorization token and content type
+    headers = {
+        'Authorization': f'Bearer {auth_token}',
+        'Content-Type': 'application/json',
+    }
+    tasks = []
+    for userstory in userstories:
+        try:
+
+            # Make a GET request to Taiga API to retrieve tasks
+            response = requests.get(tasks_api_url+str(userstory), headers=headers)
+            response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+
+            # Extract and return the tasks information from the response
+            tasks += response.json()
+
+        except requests.exceptions.RequestException as e:
+
+            # Handle errors during the API request and print an error message
+            print(f"Error fetching tasks: {e}")
+    return tasks
 
 
 # Function to retrieve closed tasks for a specific project from the Taiga API
@@ -74,8 +144,7 @@ def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
                 "id": task["id"],
                 "subject": task["subject"],
                 "created_date": task["created_date"],
-                "finished_date": task["finished_date"],
-                "ref": task["ref"]
+                "finished_date": task["finished_date"]
             }
             for task in tasks if task.get("is_closed") and task['milestone'] == sprint_id
         ]
@@ -161,5 +230,4 @@ def get_lead_times_for_tasks(project_id, sprint_id, auth_token):
         task['created_date'] = datetime.strftime(datetime.fromisoformat(task['created_date']), '%d %b %y')
         task['finished_date'] = datetime.strftime(datetime.fromisoformat(task['finished_date']), '%d %b %y')
     return taskList
-
 
