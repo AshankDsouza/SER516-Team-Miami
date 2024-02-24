@@ -54,7 +54,15 @@
     <div class="graph-container">
         <canvas id="myChart"></canvas>
     </div>
-
+    
+    <div class = "container text-center">
+        <h3>Closed tasks in the sprint: </h3>
+        <div>
+        {% for task in closed_tasks %}
+            {{ task }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+        <div>
+    </div>
 
 </br>
     <div class="container"> 

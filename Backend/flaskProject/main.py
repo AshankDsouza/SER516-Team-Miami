@@ -225,8 +225,11 @@ def cycle_time_graph_get():
     if 'auth_token' not in session: 
         return redirect('/')
     #show users all the closed tasks in the selected sprint
-    
-    return render_template('CycleTimeGraph.html')
+    closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(session["project_id"], session["sprint_id"], session["auth_token"])
+    session["closed_tasks_in_a_sprint"] = closed_tasks_in_a_spirnt
+    in_sprint_ids = [task["ref"] for task in closed_tasks_in_a_spirnt]
+    return render_template('CycleTimeGraph.html', closed_tasks = in_sprint_ids)
+
 
 @app.route('/cycle-time-graph', methods=['POST'])
 def cycle_time_graph():
@@ -237,8 +240,7 @@ def cycle_time_graph():
         closed_tasks_ids = request.json['closed_tasks_ids']
         closed_tasks_selected = []
         if closed_tasks_ids == [0]:
-            closed_tasks_selected = get_closed_tasks_for_a_sprint(session["project_id"], session['sprint_id'], session["auth_token"])
-            session["closed_tasks_in_a_sprint"] = closed_tasks_selected
+            closed_tasks_selected = session["closed_tasks_in_a_sprint"]
         else:
             closed_tasks_selected = [task for task in session["closed_tasks_in_a_sprint"] if task["ref"] in closed_tasks_ids]
         #fetch data from taiga api
