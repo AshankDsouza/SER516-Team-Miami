@@ -15,8 +15,12 @@ load_dotenv()
 # Function to retrieve tasks for a specific project from the Taiga API
 def get_tasks(project_id, auth_token):
     milestones = get_milestones_for_project(project_id, auth_token)
-    userstories = get_userstories_for_milestones(milestones, auth_token)
-    tasks = get_tasks_for_userstories(userstories, auth_token)
+    get_milestone_ids = lambda : [milestone["id"] for milestone in milestones['milestones']]
+    milestone_ids = get_milestone_ids()
+    userstories = get_userstories_for_milestones(milestone_ids, auth_token)
+    get_userstory_ids = lambda : [userstory['id'] for userstory in userstories]
+    userstory_ids = get_userstory_ids()
+    tasks = get_tasks_for_userstories(userstory_ids, auth_token)
     return tasks
 
 
@@ -40,9 +44,7 @@ def get_milestones_for_project(project_id, auth_token):
         response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
 
         # Extract and return the milestoneIds information from the response
-        get_milestone_ids = lambda milestones=response.json()["milestones"] : [milestone["id"] for milestone in milestones]
-        milestone_ids = get_milestone_ids()
-        return milestone_ids
+        return response.json()
 
     except requests.exceptions.RequestException as e:
 
@@ -63,9 +65,7 @@ def get_userstories_for_milestones(milestones, auth_token):
         'Content-Type': 'application/json',
     }
     user_stories = asyncio.run(build_and_execute_apis(milestones,milestones_api_url,headers))
-    get_userstory_ids = lambda userstories = user_stories: [userstory['id'] for userstory in userstories]
-    userstory_ids = get_userstory_ids()
-    return userstory_ids
+    return user_stories
 
 def get_tasks_for_userstories(userstories, auth_token):
     # Get Taiga API URL from environment variables
