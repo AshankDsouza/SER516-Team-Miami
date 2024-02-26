@@ -19,4 +19,6 @@ async def build_and_execute_apis(params, api_url, headers):
     while not queue.empty():
         results+=await queue.get()
 
+
     return results
+
