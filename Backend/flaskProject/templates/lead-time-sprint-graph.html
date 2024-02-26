@@ -58,7 +58,7 @@
     <p class="no-data-message">There are no closed tasks for the Sprint.Please select a different sprint</p>
     {% else %}
     <!-- Create a canvas element where the chart will be rendered -->
-    <canvas id="myChart" width="600" height="400"></canvas>
+    <canvas id="myChart" width="800" height="400"></canvas>
     {% endif %}
 
     <script>
@@ -66,11 +66,12 @@
     var jsonData = JSON.parse('{{ lead_times_for_sprint | tojson | safe}}');
 
     // Extract id and lead_time values from JSON data
-    var ids = jsonData.map(obj => obj.id);
+    var ids = jsonData.map(obj => obj.ref);
     var leadTimes = jsonData.map(obj => obj.lead_time);
     var createdDates = jsonData.map(entry => entry.created_date);
     var finishedDates = jsonData.map(entry => entry.finished_date);
     var subjects = jsonData.map(entry => entry.subject);
+    console.log(ids);
     console.log(subjects);
     console.log(createdDates);
     console.log(finishedDates);
@@ -111,7 +112,7 @@
           x: {
             title: {
               display: true,
-              text: 'SprintIds'
+              text: 'TaskIds'
             }
           },
           y: {
