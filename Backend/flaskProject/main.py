@@ -475,33 +475,54 @@ def render_burndown_bv():
 @app.route("/burndown-bv-data", methods=["GET", "POST"])
 def get_burndown_bv_data():
     if request.method == "GET":
-        # get all user stories data
-        user_stories = get_user_story(session["project_id"], session["auth_token"])
-        # use each user stories id to get bv and check if done
-        bv_per_date = [0] * 30
-        for idx, val in enumerate(user_stories):
-            ## Sprint1 filter
-            if val["milestone_name"] == "Sprint1":
-                bv = int(get_business_value_by_user_story(val["id"]))
-                if val["status_extra_info"]["name"] == "Done":
-                    # print(val)
-                    ## Jan filter
-                    if val["finish_date"][5:7] == "01":
-                        ## convert date to index
-                        bv_per_date[int(val["finish_date"][8:10]) - 29] += bv
-                    ## Feb filter
-                    if val["finish_date"][5:7] == "02":
-                        bv_per_date[int(val["finish_date"][8:10]) + 2] += bv
-        # calc bv accumulation
-        bv_accumulation = 0
-        is_accumulation = False
-        for idx, val in enumerate(bv_per_date):
-            if val != 0:
-                bv_accumulation += val
-                is_accumulation = True
-            if val == 0 and is_accumulation == True:
-                bv_per_date[idx] = bv_accumulation
-        return bv_per_date
+        try:
+            milestone = get_milestones_by_sprint(session["project_id"], session["sprint_id"], session["auth_token"])
+            data_to_plot = { 
+                "sprint_start_date": milestone["estimated_start"],
+                "sprint_end_date": milestone["estimated_finish"],
+                "x_axis": [],
+                "bv_per_date": [],
+                "milestone": milestone,
+                "user_stories": []
+            }
+            start_date  = datetime.strptime(data_to_plot["sprint_start_date"], '%Y-%m-%d')
+            end_date    = datetime.strptime(data_to_plot["sprint_end_date"], '%Y-%m-%d')
+            data_to_plot["x_axis"] = [(start_date + timedelta(days=day)).strftime("%d %b %Y") for day in range((end_date - start_date).days + 1)]
+
+            # get all user stories data
+            user_stories = get_user_story(session["project_id"], session["auth_token"])
+            data_to_plot["user_stories"] = user_stories
+            # use each user stories id to get bv and check if done
+            bv_per_date = [0] * 30
+            for idx, val in enumerate(user_stories):
+                ## Sprint1 filter
+                if val["milestone_name"] == "Sprint1":
+                    bv = int(get_business_value_by_user_story(val["id"]))
+                    if val["status_extra_info"]["name"] == "Done":
+                        ## Jan filter
+                        if val["finish_date"][5:7] == "01":
+                            ## convert date to index
+                            bv_per_date[int(val["finish_date"][8:10]) - 29] += bv
+                        ## Feb filter
+                        if val["finish_date"][5:7] == "02":
+                            bv_per_date[int(val["finish_date"][8:10]) + 2] += bv
+            # calc bv accumulation
+            bv_accumulation = 0
+            is_accumulation = False
+            for idx, val in enumerate(bv_per_date):
+                if val != 0:
+                    bv_accumulation += val
+                    is_accumulation = True
+                if val == 0 and is_accumulation == True:
+                    bv_per_date[idx] = bv_accumulation
+            data_to_plot["bv_per_date"] = bv_per_date
+
+            return jsonify(data_to_plot)
+
+        except Exception as e:
+        # Handle errors during the API request and print an error message
+            print(e)
+            return redirect('/error')
 
 @app.route("/error", methods=["GET"])
 def render_error():
