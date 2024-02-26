@@ -36,3 +36,16 @@ def get_user_story(project_id, auth_token):
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
         return None
+
+# Filter out the user stories that are in progress
+def get_in_progress_user_stories(project_id, auth_token):
+    user_stories = get_user_story(project_id, auth_token)
+    in_progress_stories = []
+    for story in user_stories:
+        if story["status_extra_info"]["name"] == "In progress":
+            in_progress_stories.append(story)
+    return in_progress_stories
+
+# get business value custom field id
+    
+# get business value for each user story: user story id, BV id#
