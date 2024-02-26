@@ -3,9 +3,19 @@ from aiohttp import ClientSession
 
 async def execute_apis(url: str, queue: asyncio.Queue, headers):
     async with ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            result = await response.json()
-            await queue.put(result)
+        try :
+            request = session.get(url, headers=headers)
+            async with request as response:
+                if response.status > 400:
+                    error_message = ""
+                    if await '_error_message' in response.json:
+                        error_message = await response.json()['_error_message']
+                    raise Exception("Error while calling " + url + ". Status code: " + response.status + " " + error_message)
+                result = await response.json()
+                await queue.put(result)
+        except Exception as e:
+            print(e)
+
 
 
 async def build_and_execute_apis(params, api_url, headers):
@@ -17,6 +27,7 @@ async def build_and_execute_apis(params, api_url, headers):
             group.create_task(execute_apis(api_url+str(i), queue, headers))
 
     while not queue.empty():
-        results+=await queue.get()
+        results.append(await queue.get())
+
 
     return results

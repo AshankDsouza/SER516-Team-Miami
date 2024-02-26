@@ -12,6 +12,7 @@ from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_clos
 from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
 from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint
 from taigaApi.task.getTasks import get_lead_times_for_tasks
+from taigaApi.customAttributes.getCustomAttributes import get_business_value_data_for_sprint
 import secrets
 import requests
 
@@ -62,10 +63,10 @@ def slug_input():
 
 @app.route('/sprint-selection', methods=['GET', 'POST'])
 def sprint_selection():
-    if 'auth_token' not in session: 
+    if 'auth_token' not in session:
         return redirect('/')
-    
-    if 'project_id' not in session: 
+
+    if 'project_id' not in session:
         return redirect('/slug-input')
 
     sprintMapping, total_sprints = get_number_of_milestones(session["project_id"], session['auth_token'])
@@ -78,7 +79,7 @@ def sprint_selection():
         print(json.dumps(sprintMapping, indent=2))
         print("\n\n")
         return redirect('/metric-selection')
-    
+
     return render_template('sprint-selection.html', total_sprints = total_sprints)
     
 @app.route('/metric-selection', methods=['GET', 'POST'])
@@ -185,7 +186,9 @@ def get_business_value_by_user_story(user_story):
     if 'auth_token' not in session:
         return redirect('/')
     auth_token  = session['auth_token']
+    project_id = session['project_id']
     taiga_url   = os.getenv('TAIGA_URL')
+    business_value_id = get_business_value_id(project_id, auth_token)
     business_value_api_url  = f"{taiga_url}/userstories/custom-attributes-values/{user_story}"
     # Define headers including the authorization token and content type
     headers = {
@@ -198,9 +201,9 @@ def get_business_value_by_user_story(user_story):
         response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
         # Extracting information from the response
         business_value_res = response.json()
-        if "40198" not in business_value_res['attributes_values']:
-            business_value_res["attributes_values"]["40198"] = 0
-        return business_value_res["attributes_values"]["40198"]
+        if str(business_value_id) not in business_value_res['attributes_values']:
+            business_value_res["attributes_values"][str(business_value_id)] = 0
+        return business_value_res["attributes_values"][str(business_value_id)]
     except requests.exceptions.RequestException as e:
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
@@ -475,33 +478,9 @@ def render_burndown_bv():
 @app.route("/burndown-bv-data", methods=["GET", "POST"])
 def get_burndown_bv_data():
     if request.method == "GET":
-        # get all user stories data
-        user_stories = get_user_story(session["project_id"], session["auth_token"])
-        # use each user stories id to get bv and check if done
-        bv_per_date = [0] * 30
-        for idx, val in enumerate(user_stories):
-            ## Sprint1 filter
-            if val["milestone_name"] == "Sprint1":
-                bv = int(get_business_value_by_user_story(val["id"]))
-                if val["status_extra_info"]["name"] == "Done":
-                    # print(val)
-                    ## Jan filter
-                    if val["finish_date"][5:7] == "01":
-                        ## convert date to index
-                        bv_per_date[int(val["finish_date"][8:10]) - 29] += bv
-                    ## Feb filter
-                    if val["finish_date"][5:7] == "02":
-                        bv_per_date[int(val["finish_date"][8:10]) + 2] += bv
-        # calc bv accumulation
-        bv_accumulation = 0
-        is_accumulation = False
-        for idx, val in enumerate(bv_per_date):
-            if val != 0:
-                bv_accumulation += val
-                is_accumulation = True
-            if val == 0 and is_accumulation == True:
-                bv_per_date[idx] = bv_accumulation
-        return bv_per_date
+        running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'],
+                                                                            session['auth_token'])
+        return list(running_bv_data.items())
 
 @app.route("/error", methods=["GET"])
 def render_error():
