@@ -46,6 +46,29 @@ def get_in_progress_user_stories(project_id, auth_token):
             in_progress_stories.append(story)
     return in_progress_stories
 
-# get business value custom field id
-    
+# get business value custom attribute id
+def get_business_value_id(project_id, auth_token):
+    taiga_url = os.getenv('TAIGA_URL')
+    custom_attribute_api_url = f"{taiga_url}/userstory-custom-attributes?project={project_id}"
+    headers = {
+        'Authorization': f'Bearer {auth_token}',
+        'Content-Type': 'application/json',
+    }
+
+    try:
+        response = requests.get(custom_attribute_api_url, headers=headers)
+        response.raise_for_status() 
+
+        custome_attributes = response.json()
+        for attribute in custome_attributes:
+            if attribute["name"] == "BV":
+                return attribute["id"]
+        return None
+
+    except requests.exceptions.RequestException as e:
+
+        # Handle errors during the API request and print an error message
+        print(f"Error fetching custom attributes: {e}")
+        return None
+
 # get business value for each user story: user story id, BV id#
