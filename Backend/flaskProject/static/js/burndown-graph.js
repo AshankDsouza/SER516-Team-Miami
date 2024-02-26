@@ -163,14 +163,13 @@ $(function () {
         url: '/burndown-bv-data',
         type: 'GET',
         success: function (response) {
-
+            // x_axis label
             businessValueChartConfig.data.labels = response.x_axis.map(date => {
                 const dateObj = new Date(date);
                 return `${dateObj.getDate()} ${dateObj.toLocaleDateString('default', { month: 'short' })}`
             });
-
+            // chart data
             businessValueChartConfig.data.datasets[0].data = response.bv_per_date
-            
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             console.log(XMLHttpRequest.status)
