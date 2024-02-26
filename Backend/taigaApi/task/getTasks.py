@@ -2,6 +2,9 @@ import os
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
+import asyncio
+from Backend.taigaApi.utils.asyncAPIs import build_and_execute_apis
+
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -9,10 +12,6 @@ load_dotenv()
 
 # Function to retrieve tasks for a specific project from the Taiga API
 def get_tasks(project_id, auth_token):
-
-    # Get Taiga API URL from environment variables
-    taiga_url = os.getenv('TAIGA_URL')
-
     milestones = get_milestones_for_project(project_id, auth_token)
     userstories = get_userstories_for_milestones(milestones, auth_token)
     tasks = get_tasks_for_userstories(userstories, auth_token)
@@ -61,22 +60,9 @@ def get_userstories_for_milestones(milestones, auth_token):
         'Authorization': f'Bearer {auth_token}',
         'Content-Type': 'application/json',
     }
-    userstory_ids = []
-    for milestone in milestones:
-        try:
-
-            # Make a GET request to Taiga API to retrieve tasks
-            response = requests.get(milestones_api_url+str(milestone), headers=headers)
-            response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-
-            # Extract and return the userstory ids information from the response
-            get_userstory_ids = lambda userstories=response.json(): [userstory["id"] for userstory in userstories]
-            userstory_ids += get_userstory_ids()
-
-        except requests.exceptions.RequestException as e:
-
-            # Handle errors during the API request and print an error message
-            print(f"Error fetching tasks: {e}")
+    user_stories = asyncio.run(build_and_execute_apis(milestones,milestones_api_url,headers))
+    get_userstory_ids = lambda userstories = user_stories: [userstory['id'] for userstory in userstories]
+    userstory_ids = get_userstory_ids()
     return userstory_ids
 
 def get_tasks_for_userstories(userstories, auth_token):
@@ -91,21 +77,7 @@ def get_tasks_for_userstories(userstories, auth_token):
         'Authorization': f'Bearer {auth_token}',
         'Content-Type': 'application/json',
     }
-    tasks = []
-    for userstory in userstories:
-        try:
-
-            # Make a GET request to Taiga API to retrieve tasks
-            response = requests.get(tasks_api_url+str(userstory), headers=headers)
-            response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-
-            # Extract and return the tasks information from the response
-            tasks += response.json()
-
-        except requests.exceptions.RequestException as e:
-
-            # Handle errors during the API request and print an error message
-            print(f"Error fetching tasks: {e}")
+    tasks = asyncio.run(build_and_execute_apis(userstories,tasks_api_url,headers))
     return tasks
 
 
@@ -131,28 +103,6 @@ def get_closed_tasks(project_id, auth_token):
         return closed_tasks
     else:
         return None
-
-def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
-
-    # Call the get_tasks function to retrieve all tasks for the project
-    tasks = get_tasks(project_id, auth_token)
-    if tasks:
-
-        # Filter tasks to include only closed tasks and format the result
-        closed_tasks = [
-            {
-                "id": task["id"],
-                "subject": task["subject"],
-                "created_date": task["created_date"],
-                "finished_date": task["finished_date"]
-            }
-            for task in tasks if task.get("is_closed") and task['milestone'] == sprint_id
-        ]
-
-        return closed_tasks
-    else:
-        return None
-
 
 # Function to retrieve all tasks for a specific project from the Taiga API
 def get_all_tasks(project_id, auth_token):
@@ -192,7 +142,8 @@ def get_one_closed_task(task_id, project_id, auth_token):
 def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
 
     # Call the get_tasks function to retrieve all tasks for the project
-    tasks = get_tasks(project_id, auth_token)
+    userstories = get_userstories_for_milestones([sprint_id], auth_token)
+    tasks = get_tasks_for_userstories(userstories, auth_token)
     if tasks:
 
         # Filter tasks to include only closed tasks and format the result
@@ -204,17 +155,12 @@ def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
                 "finished_date": task["finished_date"],
                 "ref": task["ref"]
             }
-            for task in tasks if task.get("is_closed") and task['milestone'] == sprint_id
+            for task in tasks if task.get("is_closed")
         ]
 
         return closed_tasks
     else:
-        return None         
-
-
-
-    
-
+        return None
 
 def get_lead_times_for_tasks(project_id, sprint_id, auth_token):
     tasks = get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token)
