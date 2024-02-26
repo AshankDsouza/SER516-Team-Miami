@@ -11,8 +11,8 @@ from taigaApi.task.getTaskHistory import get_task_history
 from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_closed_task, get_tasks, get_closed_tasks_for_a_sprint
 from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
 from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint
-from taigaApi.task.getTasks import get_lead_times_for_tasks
-from taigaApi.customAttributes.getCustomAttributes import get_business_value_data_for_sprint
+from taigaApi.task.getTasks import get_lead_times_for_tasks, get_userstories_for_milestones
+from taigaApi.customAttributes.getCustomAttributes import get_business_value_data_for_sprint, get_business_value_id, get_user_story_business_value_map, get_custom_attribute_values
 import secrets
 import requests
 from threading import Thread
@@ -493,3 +493,32 @@ def get_burndown_bv_data():
 @app.route("/error", methods=["GET"])
 def render_error():
     return render_template("error.html")
+
+@app.route("/VIP", methods=["GET"])
+def render_VIP():
+    if "auth_token" not in session:
+        return redirect("/")
+    return render_template("VIP.html")
+
+@app.route("/VIP", methods=["POST"])
+def get_VIP():
+    if "auth_token" not in session:
+        return redirect("/")
+    if request.method == "POST":
+        #get all the user stories from the sprint
+        user_stories = get_userstories_for_milestones(session['sprint_id'], session['auth_token'])#it has complete infromation
+        get_userstory_ids = lambda: [userstory['id'] for userstory in user_stories]
+        userstory_ids = get_userstory_ids()
+        business_value_id = get_business_value_id(session["project_id"], session["auth_token"])
+        custom_attribute_values = get_custom_attribute_values(userstory_ids, session['auth_token'])
+        user_story_business_value_map = get_user_story_business_value_map(business_value_id, custom_attribute_values)
+        total_business_value = sum(user_story_business_value_map.values())
+
+        #get total user stories points
+        total_points = 0
+        for story in user_stories:
+            if (story["total_points"] != None):
+                total_points += story["total_points"]
+        
+        #check whic user stories is in progress at a given date
+        
