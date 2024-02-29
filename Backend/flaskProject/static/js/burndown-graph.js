@@ -45,10 +45,16 @@ const totalWorkDoneChartConfig = {
         labels: [],
         datasets: [
             {
+                label: 'Ideal Values',
+                data: [],
+                borderColor: 'green',
+                fill: true
+            },
+            {
                 label: 'Actual Values',
                 data: [],
                 borderColor: 'blue',
-                fill: false
+                fill: true
             }
         ]
     },
@@ -104,7 +110,9 @@ async function getGraphData(){
             return `${dateObj.getDate()} ${dateObj.toLocaleDateString('default', { month: 'short' })}`
         });
 
-        totalWorkDoneChartConfig.data.datasets[0].data = totalWorkDoneChartData.actual_projection;
+        totalWorkDoneChartConfig.data.datasets[0].data = totalWorkDoneChartData.ideal_projection;
+
+        totalWorkDoneChartConfig.data.datasets[1].data = totalWorkDoneChartData.actual_projection;
         
         // ---------------------------
         
