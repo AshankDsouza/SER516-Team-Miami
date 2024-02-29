@@ -144,8 +144,11 @@ def get_one_closed_task(task_id, project_id, auth_token):
 def get_closed_tasks_for_a_sprint(project_id, sprint_id, auth_token):
 
     # Call the get_tasks function to retrieve all tasks for the project
-    userstories = get_userstories_for_milestones([sprint_id], auth_token)
-    tasks = get_tasks_for_userstories(userstories, auth_token)
+    userstories = get_userstories_for_milestones([sprint_id], auth_token)[0]
+    userstory_ids = (lambda: [userstory['id'] for userstory in userstories if 'id' in userstory])()
+    tasks = [task
+             for userstory_tasks in get_tasks_for_userstories(userstory_ids, auth_token)
+             for task in userstory_tasks]
     if tasks:
 
         # Filter tasks to include only closed tasks and format the result
