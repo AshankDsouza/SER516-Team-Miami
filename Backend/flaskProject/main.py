@@ -488,7 +488,7 @@ def get_burndown_bv_data():
     if request.method == "GET":
         running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'],
                                                                             session['auth_token'])
-        return list(running_bv_data.items())
+        return list((list(running_bv_data.items()), list(ideal_bv_data.items())))
 
 @app.route("/error", methods=["GET"])
 def render_error():

@@ -138,13 +138,19 @@ $(function () {
             new Chart($('#business-value-chart'), {
                 type: 'line',
                 data: {
-                    labels: response.map(entry => entry[0]),
+                    labels: response[0].map(entry => entry[0]),
                     datasets: [
                         {
-                            label: 'Business Value Delivered by Date',
-                            data: response.map(entry => entry[1]),
+                            label: 'Actual Business Value Delivered by Date',
+                            data: response[0].map(entry => entry[1]),
                             borderColor: '#ff0000',
                             backgroundColor: '#ff008c',
+                        },
+                        {
+                            label: 'Ideal Business Value Delivered by Date',
+                            data: response[1].map(entry => entry[1]),
+                            borderColor: '#ffc800',
+                            backgroundColor: '#ffc800',
                         }
                     ]
                 },
