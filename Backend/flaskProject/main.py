@@ -536,6 +536,8 @@ def calculate_VIP():
 
     print("story_points_map")
     print(story_points_map)
+    print("story_finish_date_map")
+    print(story_finish_date_map)
 
     #get story start dates
     ###
@@ -571,12 +573,12 @@ def calculate_VIP():
         for user_story in user_stories:
             if story_start_date_map[user_story["id"]] == None:
                 continue
-            date1 = story_start_date_map[user_story["id"]].replace(tzinfo=None)
+            start_date = story_start_date_map[user_story["id"]].replace(tzinfo=None)
             if story_finish_date_map[user_story["id"]] != None:
-                date2 = datetime.fromisoformat(story_finish_date_map[user_story["id"]]).replace(tzinfo=None)
+                finish_date = datetime.fromisoformat(story_finish_date_map[user_story["id"]]).replace(tzinfo=None)
             else:
-                date2 = None
-            if date1 <= date and (date2 == None or date2 >= date):
+                finish_date = None
+            if start_date <= date and (finish_date == None or finish_date > date):
                 one_day_points += story_points_map[user_story["id"]]
                 one_day_BV += user_story_business_value_map[user_story["id"]]
 
