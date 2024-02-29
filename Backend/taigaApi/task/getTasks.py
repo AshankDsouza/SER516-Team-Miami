@@ -18,7 +18,7 @@ def get_tasks(project_id, auth_token):
     get_milestone_ids = lambda : [milestone["id"] for milestone in milestones['milestones']]
     milestone_ids = get_milestone_ids()
     userstories = get_userstories_for_milestones(milestone_ids, auth_token)
-    get_userstory_ids = lambda : [userstory['id'] for userstory in userstories]
+    get_userstory_ids = lambda : [userstory['id'] for userstory in userstories if 'id' in userstory]
     userstory_ids = get_userstory_ids()
     tasks = get_tasks_for_userstories(userstory_ids, auth_token)
     return tasks
