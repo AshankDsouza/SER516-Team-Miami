@@ -42,9 +42,7 @@
                 <div class="d-flex flex-row align-items-center">
                     <button class="navbar-toggler p-3 log-out-conatiner" type="button" data-bs-toggle="offcanvas"
                         data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar"
-
-                        aria-label="Toggle navigation" id = "log-out-btn">
-
+                        aria-label="Toggle navigation">
                         <i class="bi bi-box-arrow-left logout-icon"></i>
                         <p class="log-out-text ms-1">Logout</p>
                     </button>
@@ -56,10 +54,7 @@
     <main class="flex-container">
         <section class="flex-items">
             <div class="flex-item">
-
-                <h2>Story Points Value in Progress Graph</h2>
-                <h2 class="text-center" id="loading" style="display: none;">Loading...</h2>
-
+                <h2>BD Consistency Graph</h2>
                 <div class="graph-container">
                     <canvas id="partial-work-done-chart"></canvas>
                 </div>
@@ -67,30 +62,11 @@
         </section>
     </main>
 
-    <main class="flex-container">
-        <section class="flex-items">
-            <div class="flex-item">
-                <h2>Bussiness Value in Progress Graph</h2>
-                <h2 class="text-center" id="loading2" style="display: none;">Loading...</h2>
-                <div class="graph-container">
-                    <canvas id="BV-graph"></canvas>
-                </div>
-            </div>
-        </section>
-    </main>
-
-
     <footer class="footer">
         <img src="../static/img/yellow-wave.png" alt="">
     </footer>
 
 </body>
-<script src="../static/js/ValueInProgressGraph.js"></script>
-
-    <script>
-        document.getElementById('log-out-btn').addEventListener('click', function() {
-         window.location.href = '/logout';
-        });
-    </script>
+<script src="../static/js/BdConsistencyGraph.js"></script>
 
 </html>

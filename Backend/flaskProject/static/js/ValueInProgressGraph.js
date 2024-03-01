@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", function() {
     // Sample data for demonstration
+
     const days = [];
     const storyPointsData = [];
 
     // Calculate ratio of story points for each day
     const ratioData = storyPointsData
+
 
     // Chart.js configuration
     const ctx = document.getElementById('partial-work-done-chart').getContext('2d');
@@ -37,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     });
+
 
 
     // Chart.js configuration
@@ -103,4 +106,5 @@ document.addEventListener("DOMContentLoaded", function() {
         valueInProgressChart.update();
         bvInProgressChart.update();
     })
+
 });
