@@ -7,18 +7,9 @@ from taigaApi.authenticate import authenticate
 from taigaApi.project.getProjectBySlug import get_project_by_slug
 from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
 from taigaApi.userStory.getUserStory import get_user_story
-from taigaApi.task.getTaskHistory import get_task_history
-from taigaApi.task.getTasks import (
-    get_closed_tasks,
-    get_all_tasks,
-    get_one_closed_task,
-    get_tasks,
-    get_closed_tasks_for_a_sprint,
-)
-from taigaApi.project.getProjectMilestones import (
-    get_number_of_milestones,
-    get_milestone_id,
-)
+from taigaApi.task.getTaskHistory import calculate_cycle_times_for_tasks
+from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_closed_task, get_tasks, get_closed_tasks_for_a_sprint
+from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
 from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint
 from taigaApi.task.getTasks import get_lead_times_for_tasks
 from taigaApi.customAttributes.getCustomAttributes import (
@@ -287,23 +278,9 @@ def cycle_time_graph():
                 if task["ref"] in closed_tasks_ids
             ]
 
-        # fetch data from taiga api
-        task_id_cycle_time = []
-        if closed_tasks_selected != None:
-            for task in closed_tasks_selected:
-                task_list = [task]  # get_task_history only takes a list of tasks
-                cycle_time, closed_task_number = get_task_history(
-                    task_list, session["auth_token"]
-                )
-                task_id_cycle_time.append(
-                    {
-                        "task_id": task["ref"],
-                        "cycle_time": cycle_time,
-                    }
-                )
-                print(task_id_cycle_time)
-
-        return jsonify(task_id_cycle_time)
+        #fetch data from taiga api
+        if (closed_tasks_selected != None):
+            return jsonify(calculate_cycle_times_for_tasks(closed_tasks_selected, session['auth_token']))
 
 
 @app.route("/partial-work-done-chart", methods=["GET"])
