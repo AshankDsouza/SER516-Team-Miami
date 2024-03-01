@@ -562,7 +562,7 @@ def calculate_VIP():
             else:
                 finish_date = None
 
-            if start_date.date() <= date.date() and (finish_date.date() == None or finish_date.date() > date.date()):
+            if start_date.date() <= date.date() and (finish_date == None or finish_date.date() > date.date()):
                 one_day_points += story_points_map[user_story["id"]]
                 one_day_BV += user_story_business_value_map[user_story["id"]]
 
