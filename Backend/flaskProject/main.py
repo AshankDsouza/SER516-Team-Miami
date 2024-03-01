@@ -98,6 +98,8 @@ def metric_selection():
 
         elif session['metric_selected'] == "lead_time":
             return redirect('/lead-time-graph')
+        elif session['metric_selected'] == "Value_AUC":
+            return redirect('/business-value-auc')
 
     return render_template('metric-selection.html')
 
@@ -481,3 +483,13 @@ def get_burndown_bv_data():
 @app.route("/error", methods=["GET"])
 def render_error():
     return render_template("error.html")
+
+@app.route("/business-value-auc", methods=["GET", "POST"])
+def get_business_value_auc_delta():
+    if request.method == "GET":
+        running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'],
+                                                                            session['auth_token'])
+        bv_auc_delta = (lambda : { item : round(abs(running_bv_data[item] - ideal_bv_data[item]), 2)
+                                  for item in running_bv_data.keys()})()
+
+        return render_template('value-auc-graph.html', bv_auc_delta=list(bv_auc_delta.items()))
