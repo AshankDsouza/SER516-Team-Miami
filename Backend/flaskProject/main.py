@@ -509,3 +509,76 @@ def get_business_value_auc_delta():
         auc_list = list(auc.items())
         auc_list.sort(key = lambda x : x[0])
         return render_template('value-auc-graph.html', bv_auc_delta=list(sprint_bv_auc_delta.items()), auc = auc_list)
+
+
+@app.route("/bd", methods=["GET"])
+def render_bd_page():
+    return render_template("BD-Consistency-graph.html")
+
+@app.route("/bd-calculation", methods=["GET"])
+def render_bd_page():
+    if "auth_token" not in session:
+        return redirect('/')
+
+    if 'project_id' in session:
+        project_id = session['project_id']
+
+    if 'sprint_id' in session:
+        sprint_id = session['sprint_id']
+
+    if((not project_id) or (not sprint_id)):
+        return 'Invalid request!'
+    
+    # Data required to plot is stored here
+    data_to_plot = { 
+            "total_story_points": 0,
+            "x_axis": [],
+            "y_axis": [],
+    
+            "actual_projection": [],
+            "sprint_start_date": milestone["estimated_start"],
+            "sprint_end_date": milestone["estimated_finish"],
+    }
+    milestone = get_milestones_by_sprint(project_id, sprint_id, session["auth_token"])
+    for user_story in milestone["user_stories"]:
+        if user_story["total_points"] == None: 
+            continue
+
+        data_to_plot["total_story_points"] += int(user_story["total_points"])
+            
+    start_date  = datetime.strptime(data_to_plot["sprint_start_date"], '%Y-%m-%d')
+    end_date = datetime.strptime(data_to_plot["sprint_end_date"], '%Y-%m-%d')
+
+    data_to_plot["x_axis"] = [(start_date + timedelta(days=day)).strftime("%d %b %Y") for day in range((end_date - start_date).days + 1)]
+    data_to_plot["y_axis"] = [i for i in range(0, data_to_plot["total_story_points"] + 20, 20)]
+
+
+    for index in range(0, len(data_to_plot["x_axis"])):
+        current_processing_date = data_to_plot["x_axis"][index]
+        current_processing_date_points = 0
+
+        if index <= 0:
+            current_processing_date_points = data_to_plot["total_story_points"]
+        else:
+            current_processing_date_points = data_to_plot["actual_projection"][index - 1]
+
+        total_points_completed = 0
+        for user_story in milestone["user_stories"]:
+            if(user_story["finish_date"] == None or user_story["total_points"] == None):
+                continue
+
+            finish_date = datetime.fromisoformat(user_story["finish_date"]).strftime("%d %b %Y")
+                    
+            if(finish_date != current_processing_date):
+                continue
+
+            total_points_completed = user_story["total_points"] + total_points_completed
+
+        data_to_plot["actual_projection"].append(round(current_processing_date_points - total_points_completed, 1))
+
+        running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'],
+                                                                            session['auth_token'])
+        
+    #data needs for calculation
+    #running_bv_data, ideal_bv_data, data_to_plot["actual_projection"], data_to_plot["totla_story_points"]
+        
