@@ -7,7 +7,7 @@ from taigaApi.authenticate import authenticate
 from taigaApi.project.getProjectBySlug import get_project_by_slug
 from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
 from taigaApi.userStory.getUserStory import get_user_story
-from taigaApi.task.getTaskHistory import get_task_history
+from taigaApi.task.getTaskHistory import calculate_cycle_times_for_tasks
 from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_closed_task, get_tasks, get_closed_tasks_for_a_sprint
 from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
 from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint, get_milestone_stats_by_sprint
@@ -99,8 +99,13 @@ def metric_selection():
 
         elif session['metric_selected'] == "lead_time":
             return redirect('/lead-time-graph')
+
         elif session['metric_selected'] == "VIP":
             return redirect('/VIP')
+
+        elif session['metric_selected'] == "Value_AUC":
+            return redirect('/business-value-auc')
+
 
     return render_template('metric-selection.html')
 
@@ -254,20 +259,8 @@ def cycle_time_graph():
             closed_tasks_selected = [task for task in session["closed_tasks_in_a_sprint"] if task["ref"] in closed_tasks_ids]
 
         #fetch data from taiga api
-        task_id_cycle_time = []
         if (closed_tasks_selected != None):
-            for task in closed_tasks_selected:
-                task_list = [task] #get_task_history only takes a list of tasks
-                cycle_time, closed_task_number = get_task_history(task_list, session['auth_token'])
-                task_id_cycle_time.append(
-                    {
-                        "task_id": task["ref"],
-                        "cycle_time": cycle_time,
-                    }
-                )
-                print(task_id_cycle_time)
-
-        return jsonify(task_id_cycle_time)
+            return jsonify(calculate_cycle_times_for_tasks(closed_tasks_selected, session['auth_token']))
 
 
 @app.route('/partial-work-done-chart', methods=['GET'])
@@ -491,11 +484,12 @@ def get_burndown_bv_data():
     if request.method == "GET":
         running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'],
                                                                             session['auth_token'])
-        return list(running_bv_data.items())
+        return list((list(running_bv_data.items()), list(ideal_bv_data.items())))
 
 @app.route("/error", methods=["GET"])
 def render_error():
     return render_template("error.html")
+
 
 @app.route("/VIP", methods=["GET"])
 def render_VIP_page():
@@ -575,3 +569,30 @@ def calculate_VIP():
         one_day_BV = 0
         
     return jsonify(data_points)
+
+@app.route("/business-value-auc", methods=["GET", "POST"])
+def get_business_value_auc_delta():
+    if request.method == "GET":
+        sprintMapping, sprints = get_number_of_milestones(session['project_id'], session['auth_token'])
+        auc_map = dict()
+        sprint_bv_auc_delta = None
+        for sprint_id in list(sprintMapping.values()):
+            running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], sprint_id,
+                                                                                session['auth_token'])
+            total_bv_for_sprint = list(ideal_bv_data.values())[0]
+            if total_bv_for_sprint:
+                bv_auc_delta = (lambda : { item : round(abs(( total_bv_for_sprint - running_bv_data[item])/total_bv_for_sprint
+                                                            - (total_bv_for_sprint - ideal_bv_data[item])/total_bv_for_sprint), 2)
+                                          for item in running_bv_data.keys()})()
+                if sprint_id == session['sprint_id']:
+                    sprint_bv_auc_delta = bv_auc_delta
+                auc_map[sprint_id] = sum(list(bv_auc_delta.values()))
+            else:
+                auc_map[sprint_id] = 0
+        auc = dict()
+        for item in sprintMapping.items():
+            auc['Sprint ' + str(sprints - int(item[0]) + 1)] = auc_map[item[1]]*100
+        auc_list = list(auc.items())
+        auc_list.sort(key = lambda x : x[0])
+        return render_template('value-auc-graph.html', bv_auc_delta=list(sprint_bv_auc_delta.items()), auc = auc_list)
+
