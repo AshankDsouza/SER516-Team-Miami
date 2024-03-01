@@ -17,10 +17,10 @@ def get_tasks(project_id, auth_token):
     milestones = get_milestones_for_project(project_id, auth_token)
     get_milestone_ids = lambda : [milestone["id"] for milestone in milestones['milestones']]
     milestone_ids = get_milestone_ids()
-    userstories = get_userstories_for_milestones(milestone_ids, auth_token)
+    userstories = [user_story for sprint_user_stories in get_userstories_for_milestones(milestone_ids, auth_token) for user_story in sprint_user_stories]
     get_userstory_ids = lambda : [userstory['id'] for userstory in userstories if 'id' in userstory]
     userstory_ids = get_userstory_ids()
-    tasks = get_tasks_for_userstories(userstory_ids, auth_token)
+    tasks = [task for userstory_task in get_tasks_for_userstories(userstory_ids, auth_token) for task in userstory_task]
     return tasks
 
 
