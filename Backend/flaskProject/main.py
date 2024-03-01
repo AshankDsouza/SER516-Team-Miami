@@ -487,9 +487,25 @@ def render_error():
 @app.route("/business-value-auc", methods=["GET", "POST"])
 def get_business_value_auc_delta():
     if request.method == "GET":
-        running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'],
-                                                                            session['auth_token'])
-        bv_auc_delta = (lambda : { item : round(abs(running_bv_data[item] - ideal_bv_data[item]), 2)
-                                  for item in running_bv_data.keys()})()
-
-        return render_template('value-auc-graph.html', bv_auc_delta=list(bv_auc_delta.items()))
+        sprintMapping, sprints = get_number_of_milestones(session['project_id'], session['auth_token'])
+        auc_map = dict()
+        sprint_bv_auc_delta = None
+        for sprint_id in list(sprintMapping.values()):
+            running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], sprint_id,
+                                                                                session['auth_token'])
+            total_bv_for_sprint = list(ideal_bv_data.values())[0]
+            if total_bv_for_sprint:
+                bv_auc_delta = (lambda : { item : round(abs(( total_bv_for_sprint - running_bv_data[item])/total_bv_for_sprint
+                                                            - (total_bv_for_sprint - ideal_bv_data[item])/total_bv_for_sprint), 2)
+                                          for item in running_bv_data.keys()})()
+                if sprint_id == session['sprint_id']:
+                    sprint_bv_auc_delta = bv_auc_delta
+                auc_map[sprint_id] = sum(list(bv_auc_delta.values()))
+            else:
+                auc_map[sprint_id] = 0
+        auc = dict()
+        for item in sprintMapping.items():
+            auc['Sprint ' + str(sprints - int(item[0]) + 1)] = auc_map[item[1]]*100
+        auc_list = list(auc.items())
+        auc_list.sort(key = lambda x : x[0])
+        return render_template('value-auc-graph.html', bv_auc_delta=list(sprint_bv_auc_delta.items()), auc = auc_list)
