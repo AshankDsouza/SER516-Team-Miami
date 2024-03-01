@@ -39,71 +39,111 @@
                 <div class="logo-container d-flex flex-row align-items-center">
                     <a class="navbar-brand" href="#">
                         <img src="../static/img/team-miaim-logo.jpeg" alt="Logo" width="50" height="44"
-                                class="d-inline-block align-text-top">
+                            class="d-inline-block align-text-top">
                     </a>
                     <p class="logo-name">Team Miami</p>
                 </div>
                 <div class="d-flex flex-row align-items-center">
-                    <button class="navbar-toggler p-3 log-out-container slug-submit-btn" type="button" data-bs-toggle="offcanvas"
-                            data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" id = "log-out-btn"
-                            aria-label="Toggle navigation">
-                            <i class="bi bi-box-arrow-left logout-icon"></i>
-                            <p class="log-out-text ms-1">Logout</p>
-                        </button>
+                    <button class="navbar-toggler p-3 log-out-container slug-submit-btn" type="button"
+                        data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar"
+                        id="log-out-btn" aria-label="Toggle navigation">
+                        <i class="bi bi-box-arrow-left logout-icon"></i>
+                        <p class="log-out-text ms-1">Logout</p>
+                    </button>
                 </div>
             </div>
         </nav>
     </header>
-    <!-- Create a canvas element where the chart will be rendered -->
+    <!-- Create canvas elements where the charts will be rendered -->
     <canvas id="valueAUCChart" width="800" height="400"></canvas>
+    <canvas id="valueAUCChart2" width="800" height="400"></canvas>
 
     <script>
         // Parse JSON data
-    var jsonData = JSON.parse('{{ bv_auc_delta | tojson | safe}}');
+        var jsonData = JSON.parse('{{ bv_auc_delta | tojson | safe}}');
+        var jsonDataAUC = JSON.parse('{{ auc | tojson | safe}}');
 
-    // Extract id and lead_time values from JSON data
-    var ids = jsonData.map(obj => obj[0]);
-    // Get the canvas element
-    var ctx = document.getElementById('valueAUCChart').getContext('2d');
+        // Extract id and lead_time values from JSON data
+        var ids = jsonData.map(obj => obj[0]);
+        var idsAUC = jsonDataAUC.map(obj => obj[0]);
 
-    // Create the chart
-    var myChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ids,
-        datasets: [{
-          label: 'Delta',
-          data: jsonData.map(obj => obj[1]),
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
+        // Get the canvas elements
+        var ctx = document.getElementById('valueAUCChart').getContext('2d');
+        var ctx2 = document.getElementById('valueAUCChart2').getContext('2d');
 
-        }]
-      },
-      options: {
-        plugins: {
-          tooltip: {
-          }
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Sprint Days'
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Business Value Delta'
+        // Create the first chart
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ids,
+                datasets: [{
+                    label: 'Delta',
+                    data: jsonData.map(obj => obj[1]),
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                }]
             },
-            ticks: {
-              beginAtZero: true
+            options: {
+                plugins: {
+                    tooltip: {}
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Sprint Days'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Business Value Delta'
+                        },
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }
+                }
             }
-          }
-        }
-      }
-    });
+        });
+
+        // Create the second chart
+        var myChart2 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: idsAUC,
+                datasets: [{
+                    label: 'AUC',
+                    data: jsonDataAUC.map(obj => obj[1]),
+                    fill: false,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {}
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Sprints'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'AUC in percentage'
+                        },
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            }
+        });
     </script>
 </body>
 
