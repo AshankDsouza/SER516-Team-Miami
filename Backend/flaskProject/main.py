@@ -99,6 +99,8 @@ def metric_selection():
 
         elif session['metric_selected'] == "lead_time":
             return redirect('/lead-time-graph')
+        elif session['metric_selected'] == "VIP":
+            return redirect('/VIP')
 
     return render_template('metric-selection.html')
 
@@ -499,7 +501,7 @@ def render_error():
 def render_VIP_page():
     if "auth_token" not in session:
         return redirect("/")
-    return render_template("VIP.html")
+    return render_template("ValueInProgressGraph.html")
 
 @app.route("/VIPC", methods=["GET"])
 def calculate_VIP():
@@ -515,8 +517,6 @@ def calculate_VIP():
     custom_attribute_values = get_custom_attribute_values(userstory_ids, session['auth_token'])
     ###
     user_story_business_value_map = get_user_story_business_value_map(business_value_id, custom_attribute_values)
-    print("user_story_business_value_map")
-    print(user_story_business_value_map)
     total_business_value = sum(user_story_business_value_map.values())
     ###
 
@@ -534,11 +534,6 @@ def calculate_VIP():
             story_points_map[story["id"]] = story["total_points"]
             story_finish_date_map[story["id"]] = story["finish_date"]
 
-    print("story_points_map")
-    print(story_points_map)
-    print("story_finish_date_map")
-    print(story_finish_date_map)
-
     #get story start dates
     ###
     story_start_date_map = get_user_story_start_date(user_stories, session['auth_token'])
@@ -551,18 +546,6 @@ def calculate_VIP():
     sprint_start_date = datetime.fromisoformat(sprint_start_date)
     sprint_finish_date = sprint_data["estimated_finish"]
     sprint_finish_date = datetime.fromisoformat(sprint_finish_date)
-    """
-    data_to_plot = { 
-            "total_story_points": total_points,
-            "x_axis": [],
-            "y_axis": [],
-            "sprint_start_date": sprint_start_date,
-            "sprint_end_date": sprint_finish_date,
-    }
-
-    data_to_plot["x_axis"] = [(sprint_start_date + timedelta(days=day)).strftime("%d %b %Y") for day in range((sprint_finish_date - sprint_start_date).days + 1)]
-    data_to_plot["y_axis"] = [i for i in range(0, data_to_plot["total_story_points"] + 20, 10)]
-    """
     #check which user stories is in progress at a given date
     date_list = [(sprint_start_date + timedelta(days=day)) for day in range((sprint_finish_date - sprint_start_date).days + 1)]
     data_points = []
@@ -578,7 +561,8 @@ def calculate_VIP():
                 finish_date = datetime.fromisoformat(story_finish_date_map[user_story["id"]]).replace(tzinfo=None)
             else:
                 finish_date = None
-            if start_date <= date and (finish_date == None or finish_date > date):
+
+            if start_date.date() <= date.date() and (finish_date.date() == None or finish_date.date() > date.date()):
                 one_day_points += story_points_map[user_story["id"]]
                 one_day_BV += user_story_business_value_map[user_story["id"]]
 
@@ -590,6 +574,4 @@ def calculate_VIP():
         one_day_points = 0
         one_day_BV = 0
         
-        print(data_points)
-
     return jsonify(data_points)
