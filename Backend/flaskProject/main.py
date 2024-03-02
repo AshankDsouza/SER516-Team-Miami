@@ -8,12 +8,32 @@ from taigaApi.project.getProjectBySlug import get_project_by_slug
 from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
 from taigaApi.userStory.getUserStory import get_user_story
 from taigaApi.task.getTaskHistory import calculate_cycle_times_for_tasks
-from taigaApi.task.getTasks import get_closed_tasks, get_all_tasks, get_one_closed_task, get_tasks, get_closed_tasks_for_a_sprint
-from taigaApi.project.getProjectMilestones import get_number_of_milestones, get_milestone_id
+from taigaApi.task.getTasks import (
+    get_closed_tasks,
+    get_all_tasks,
+    get_one_closed_task,
+    get_tasks,
+    get_closed_tasks_for_a_sprint,
+)
+from taigaApi.project.getProjectMilestones import (
+    get_number_of_milestones,
+    get_milestone_id,
+)
 
-from taigaApi.milestones.getMilestonesForSprint import get_milestones_by_sprint, get_milestone_stats_by_sprint
-from taigaApi.task.getTasks import get_lead_times_for_tasks, get_userstories_for_milestones
-from taigaApi.customAttributes.getCustomAttributes import get_business_value_data_for_sprint, get_business_value_id, get_user_story_business_value_map, get_custom_attribute_values
+from taigaApi.milestones.getMilestonesForSprint import (
+    get_milestones_by_sprint,
+    get_milestone_stats_by_sprint,
+)
+from taigaApi.task.getTasks import (
+    get_lead_times_for_tasks,
+    get_userstories_for_milestones,
+)
+from taigaApi.customAttributes.getCustomAttributes import (
+    get_business_value_data_for_sprint,
+    get_business_value_id,
+    get_user_story_business_value_map,
+    get_custom_attribute_values,
+)
 from taigaApi.userStory.getUserStory import get_user_story_start_date
 
 import secrets
@@ -113,17 +133,16 @@ def metric_selection():
         elif session["metric_selected"] == "Work_AUC":
             return redirect("/work-auc")
 
-        elif session['metric_selected'] == "lead_time":
-            return redirect('/lead-time-graph')
+        elif session["metric_selected"] == "lead_time":
+            return redirect("/lead-time-graph")
 
-        elif session['metric_selected'] == "VIP":
-            return redirect('/VIP')
+        elif session["metric_selected"] == "VIP":
+            return redirect("/VIP")
 
-        elif session['metric_selected'] == "Value_AUC":
-            return redirect('/business-value-auc')
+        elif session["metric_selected"] == "Value_AUC":
+            return redirect("/business-value-auc")
 
-
-    return render_template('metric-selection.html')
+    return render_template("metric-selection.html")
 
 
 @app.route("/burndown-graph", methods=["GET"])
@@ -289,9 +308,13 @@ def cycle_time_graph():
                 if task["ref"] in closed_tasks_ids
             ]
 
-        #fetch data from taiga api
-        if (closed_tasks_selected != None):
-            return jsonify(calculate_cycle_times_for_tasks(closed_tasks_selected, session['auth_token']))
+        # fetch data from taiga api
+        if closed_tasks_selected != None:
+            return jsonify(
+                calculate_cycle_times_for_tasks(
+                    closed_tasks_selected, session["auth_token"]
+                )
+            )
 
 
 @app.route("/partial-work-done-chart", methods=["GET"])
@@ -571,230 +594,139 @@ def render_work_auc():
     return render_template("work-auc.html")
 
 
-@app.route("/partial-work-auc-data", methods=["GET", "POST"])
-def get_partial_work_auc_data():
+@app.route("/work-auc-data", methods=["GET", "POST"])
+def get_work_auc_data():
     if request.method == "GET":
         try:
-            milestone = get_milestones_by_sprint(
-                session["project_id"], session["sprint_id"], session["auth_token"]
+            sprintMapping, sprints = get_number_of_milestones(
+                session["project_id"], session["auth_token"]
             )
-            tasks = get_tasks(session["project_id"], session["auth_token"])
 
-            processing_user_stories = {}
-            data_to_plot = {
-                "total_story_points": 0,
-                "x_axis": [],
-                "y_axis": [],
-                "ideal_projection": [],
-                "actual_projection": [],
-                "sprint_start_date": milestone["estimated_start"],
-                "sprint_end_date": milestone["estimated_finish"],
-            }
-
-            for user_story in milestone["user_stories"]:
-                if user_story["total_points"] == None:
-                    continue
-                processing_user_stories[user_story["id"]] = {
-                    "points": int(user_story["total_points"]),
-                    "created_date": user_story["created_date"],
-                    "finish_date": user_story["finish_date"],
-                    "tasks": [],
-                }
-                data_to_plot["total_story_points"] += int(user_story["total_points"])
-
-            start_date = datetime.strptime(
-                data_to_plot["sprint_start_date"], "%Y-%m-%d"
-            )
-            end_date = datetime.strptime(data_to_plot["sprint_end_date"], "%Y-%m-%d")
-
-            data_to_plot["x_axis"] = [
-                (start_date + timedelta(days=day)).strftime("%d %b %Y")
-                for day in range((end_date - start_date).days + 1)
-            ]
-            data_to_plot["y_axis"] = [
-                i for i in range(0, data_to_plot["total_story_points"] + 20, 10)
-            ]
-
-            ideal_graph_points = data_to_plot["total_story_points"]
-            avg_comp_story_point = data_to_plot["total_story_points"] / (
-                len(data_to_plot["x_axis"]) - 1
-            )
-            while ideal_graph_points > 0:
-                temp = round(ideal_graph_points - avg_comp_story_point, 1)
-
-                if len(data_to_plot["ideal_projection"]) <= 0:
-                    data_to_plot["ideal_projection"].append(
-                        data_to_plot["total_story_points"]
-                    )
-                if temp > 0:
-                    data_to_plot["ideal_projection"].append(temp)
-                else:
-                    data_to_plot["ideal_projection"].append(0)
-                ideal_graph_points = temp
-            for task in tasks:
-                if task["user_story"] not in processing_user_stories:
-                    continue
-                task_finished_date = None
-                if task["status_extra_info"]["is_closed"]:
-                    task_finished_date = datetime.fromisoformat(
-                        task["finished_date"]
-                    ).strftime("%d %b %Y")
-                processing_user_stories[task["user_story"]]["tasks"].append(
-                    {
-                        "closed": task["status_extra_info"]["is_closed"],
-                        "finished_date": task_finished_date,
-                    }
+            work_auc_by_sprint_id = {}
+            for sprint_id in list(sprintMapping.values()):
+                milestone = get_milestones_by_sprint(
+                    session["project_id"], sprint_id, session["auth_token"]
                 )
-            for index in range(0, len(data_to_plot["x_axis"])):
-                current_processing_date = data_to_plot["x_axis"][index]
-                current_processing_date_points = 0
-                if index <= 0:
-                    current_processing_date_points = data_to_plot["total_story_points"]
-                else:
-                    current_processing_date_points = data_to_plot["actual_projection"][
-                        index - 1
-                    ]
-                for user_story_id in processing_user_stories:
-                    user_story = processing_user_stories[user_story_id]
-                    task_count = len(user_story["tasks"])
-                    if task_count <= 0:
+
+                data_to_plot = {
+                    "total_story_points": 0,
+                    "x_axis": [],
+                    "y_axis": [],
+                    "ideal_projection": [],
+                    "actual_projection": [],
+                    "sprint_start_date": milestone["estimated_start"],
+                    "sprint_end_date": milestone["estimated_finish"],
+                }
+
+                for user_story in milestone["user_stories"]:
+                    if user_story["total_points"] == None:
                         continue
-                    task_points = user_story["points"] / task_count
-                    for task in user_story["tasks"]:
+                    data_to_plot["total_story_points"] += int(
+                        user_story["total_points"]
+                    )
+
+                start_date = datetime.strptime(
+                    data_to_plot["sprint_start_date"], "%Y-%m-%d"
+                )
+                end_date = datetime.strptime(
+                    data_to_plot["sprint_end_date"], "%Y-%m-%d"
+                )
+
+                data_to_plot["x_axis"] = [
+                    (start_date + timedelta(days=day)).strftime("%d %b %Y")
+                    for day in range((end_date - start_date).days + 1)
+                ]
+                data_to_plot["y_axis"] = [
+                    i for i in range(0, data_to_plot["total_story_points"] + 20, 20)
+                ]
+
+                ideal_graph_points = data_to_plot["total_story_points"]
+                avg_comp_story_point = data_to_plot["total_story_points"] / (
+                    len(data_to_plot["x_axis"]) - 1
+                )
+                while ideal_graph_points > 0:
+                    temp = round(ideal_graph_points - avg_comp_story_point, 1)
+                    if len(data_to_plot["ideal_projection"]) <= 0:
+                        data_to_plot["ideal_projection"].append(
+                            data_to_plot["total_story_points"]
+                        )
+                    if temp > 0:
+                        data_to_plot["ideal_projection"].append(temp)
+                    else:
+                        data_to_plot["ideal_projection"].append(0)
+                    ideal_graph_points = temp
+                for index in range(0, len(data_to_plot["x_axis"])):
+                    current_processing_date = data_to_plot["x_axis"][index]
+                    current_processing_date_points = 0
+                    if index <= 0:
+                        current_processing_date_points = data_to_plot[
+                            "total_story_points"
+                        ]
+                    else:
+                        current_processing_date_points = data_to_plot[
+                            "actual_projection"
+                        ][index - 1]
+                    total_points_completed = 0
+                    for user_story in milestone["user_stories"]:
                         if (
-                            not task["closed"]
-                            or task["finished_date"] != current_processing_date
+                            user_story["finish_date"] == None
+                            or user_story["total_points"] == None
                         ):
                             continue
-                        current_processing_date_points = (
-                            current_processing_date_points - task_points
+                        finish_date = datetime.fromisoformat(
+                            user_story["finish_date"]
+                        ).strftime("%d %b %Y")
+
+                        if finish_date != current_processing_date:
+                            continue
+                        total_points_completed = (
+                            user_story["total_points"] + total_points_completed
                         )
-                data_to_plot["actual_projection"].append(
-                    round(current_processing_date_points, 1)
-                )
+                    data_to_plot["actual_projection"].append(
+                        round(
+                            current_processing_date_points - total_points_completed, 1
+                        )
+                    )
 
-            actual_value = data_to_plot["actual_projection"]
-            ideal_value = data_to_plot["ideal_projection"]
-            work_auc_delta = []
-            for idx in range(len(actual_value)):
-                work_auc_delta.append(
-                    round(abs(actual_value[idx] - ideal_value[idx]), 2)
-                )
+                actual_value = data_to_plot["actual_projection"]
+                ideal_value = data_to_plot["ideal_projection"]
+                total_points = data_to_plot["total_story_points"]
+                work_auc_delta = []
+                for idx in range(len(actual_value)):
+                    if total_points != 0:
+                        work_auc_delta.append(
+                            round(
+                                abs(
+                                    (total_points - actual_value[idx]) / total_points
+                                    - (total_points - ideal_value[idx]) / total_points
+                                ),
+                                2,
+                            )
+                        )
+                    else:
+                        work_auc_delta.append(0)
+                
+                work_auc_by_sprint_id[sprint_id] = sum(work_auc_delta) * 100
+
+            work_auc_by_sprint_order = []
+            for sprint_id in list(sprintMapping.values()):
+                work_auc_by_sprint_order.insert(0, work_auc_by_sprint_id[sprint_id])
+
+            sprint_label = []
+            for i in range(sprints):
+                sprint_label.append("Sprint " + str(i + 1))
+
+            return jsonify(
+                {
+                    "x_axis": sprint_label,
+                    "work_auc_by_sprint_order": work_auc_by_sprint_order,
+                }
+            )
 
         except Exception as e:
             # Handle errors during the API request and print an error message
             print(e)
             return redirect("/error")
-
-        return jsonify(
-            {
-                "x_axis": data_to_plot["x_axis"],
-                "work_auc_delta": work_auc_delta,
-                "work_auc": sum(work_auc_delta),
-            }
-        )
-
-
-@app.route("/total-work-auc-data", methods=["GET", "POST"])
-def get_total_work_auc_data():
-    if request.method == "GET":
-        try:
-            milestone = get_milestones_by_sprint(
-                session["project_id"], session["sprint_id"], session["auth_token"]
-            )
-
-            data_to_plot = {
-                "total_story_points": 0,
-                "x_axis": [],
-                "y_axis": [],
-                "ideal_projection": [],
-                "actual_projection": [],
-                "sprint_start_date": milestone["estimated_start"],
-                "sprint_end_date": milestone["estimated_finish"],
-            }
-
-            for user_story in milestone["user_stories"]:
-                if user_story["total_points"] == None:
-                    continue
-                data_to_plot["total_story_points"] += int(user_story["total_points"])
-
-            start_date = datetime.strptime(
-                data_to_plot["sprint_start_date"], "%Y-%m-%d"
-            )
-            end_date = datetime.strptime(data_to_plot["sprint_end_date"], "%Y-%m-%d")
-
-            data_to_plot["x_axis"] = [
-                (start_date + timedelta(days=day)).strftime("%d %b %Y")
-                for day in range((end_date - start_date).days + 1)
-            ]
-            data_to_plot["y_axis"] = [
-                i for i in range(0, data_to_plot["total_story_points"] + 20, 20)
-            ]
-
-            ideal_graph_points = data_to_plot["total_story_points"]
-            avg_comp_story_point = data_to_plot["total_story_points"] / (
-                len(data_to_plot["x_axis"]) - 1
-            )
-            while ideal_graph_points > 0:
-                temp = round(ideal_graph_points - avg_comp_story_point, 1)
-                if len(data_to_plot["ideal_projection"]) <= 0:
-                    data_to_plot["ideal_projection"].append(
-                        data_to_plot["total_story_points"]
-                    )
-                if temp > 0:
-                    data_to_plot["ideal_projection"].append(temp)
-                else:
-                    data_to_plot["ideal_projection"].append(0)
-                ideal_graph_points = temp
-            for index in range(0, len(data_to_plot["x_axis"])):
-                current_processing_date = data_to_plot["x_axis"][index]
-                current_processing_date_points = 0
-                if index <= 0:
-                    current_processing_date_points = data_to_plot["total_story_points"]
-                else:
-                    current_processing_date_points = data_to_plot["actual_projection"][
-                        index - 1
-                    ]
-                total_points_completed = 0
-                for user_story in milestone["user_stories"]:
-                    if (
-                        user_story["finish_date"] == None
-                        or user_story["total_points"] == None
-                    ):
-                        continue
-                    finish_date = datetime.fromisoformat(
-                        user_story["finish_date"]
-                    ).strftime("%d %b %Y")
-
-                    if finish_date != current_processing_date:
-                        continue
-                    total_points_completed = (
-                        user_story["total_points"] + total_points_completed
-                    )
-                data_to_plot["actual_projection"].append(
-                    round(current_processing_date_points - total_points_completed, 1)
-                )
-
-            actual_value = data_to_plot["actual_projection"]
-            ideal_value = data_to_plot["ideal_projection"]
-            work_auc_delta = []
-            for idx in range(len(actual_value)):
-                work_auc_delta.append(
-                    round(abs(actual_value[idx] - ideal_value[idx]), 2)
-                )
-
-        except Exception as e:
-            # Handle errors during the API request and print an error message
-            print(e)
-            return redirect("/error")
-
-        return jsonify(
-            {
-                "x_axis": data_to_plot["x_axis"],
-                "work_auc_delta": work_auc_delta,
-                "work_auc": sum(work_auc_delta),
-            }
-        )
 
 
 @app.route("/error", methods=["GET"])
@@ -808,24 +740,35 @@ def render_VIP_page():
         return redirect("/")
     return render_template("ValueInProgressGraph.html")
 
+
 @app.route("/VIPC", methods=["GET"])
 def calculate_VIP():
     if "auth_token" not in session:
         return redirect("/")
-    #get all the user stories from the sprint
-    user_stories = get_userstories_for_milestones([session['sprint_id']], session['auth_token'])[0]#it has complete infromation
+    # get all the user stories from the sprint
+    user_stories = get_userstories_for_milestones(
+        [session["sprint_id"]], session["auth_token"]
+    )[
+        0
+    ]  # it has complete infromation
 
-    #get business value of each user story, and calculate total business value
-    get_userstory_ids = lambda: [userstory['id'] for userstory in user_stories]
+    # get business value of each user story, and calculate total business value
+    get_userstory_ids = lambda: [userstory["id"] for userstory in user_stories]
     userstory_ids = get_userstory_ids()
-    business_value_id = get_business_value_id(session["project_id"], session["auth_token"])
-    custom_attribute_values = get_custom_attribute_values(userstory_ids, session['auth_token'])
+    business_value_id = get_business_value_id(
+        session["project_id"], session["auth_token"]
+    )
+    custom_attribute_values = get_custom_attribute_values(
+        userstory_ids, session["auth_token"]
+    )
     ###
-    user_story_business_value_map = get_user_story_business_value_map(business_value_id, custom_attribute_values)
+    user_story_business_value_map = get_user_story_business_value_map(
+        business_value_id, custom_attribute_values
+    )
     total_business_value = sum(user_story_business_value_map.values())
     ###
 
-    #get total user stories points
+    # get total user stories points
 
     ####
     total_points = 0
@@ -834,25 +777,32 @@ def calculate_VIP():
     ####
 
     for story in user_stories:
-        if (story["total_points"] != None):
+        if story["total_points"] != None:
             total_points += story["total_points"]
             story_points_map[story["id"]] = story["total_points"]
             story_finish_date_map[story["id"]] = story["finish_date"]
 
-    #get story start dates
+    # get story start dates
     ###
-    story_start_date_map = get_user_story_start_date(user_stories, session['auth_token'])
+    story_start_date_map = get_user_story_start_date(
+        user_stories, session["auth_token"]
+    )
     ###
 
-    #get starting date of a sprint
-    #get ending date of a sprint "finish_date"
-    sprint_data = get_milestones_by_sprint (session['project_id'], session['sprint_id'], session['auth_token'])
-    sprint_start_date =  sprint_data["estimated_start"]
+    # get starting date of a sprint
+    # get ending date of a sprint "finish_date"
+    sprint_data = get_milestones_by_sprint(
+        session["project_id"], session["sprint_id"], session["auth_token"]
+    )
+    sprint_start_date = sprint_data["estimated_start"]
     sprint_start_date = datetime.fromisoformat(sprint_start_date)
     sprint_finish_date = sprint_data["estimated_finish"]
     sprint_finish_date = datetime.fromisoformat(sprint_finish_date)
-    #check which user stories is in progress at a given date
-    date_list = [(sprint_start_date + timedelta(days=day)) for day in range((sprint_finish_date - sprint_start_date).days + 1)]
+    # check which user stories is in progress at a given date
+    date_list = [
+        (sprint_start_date + timedelta(days=day))
+        for day in range((sprint_finish_date - sprint_start_date).days + 1)
+    ]
     data_points = []
     one_day_points = 0
     one_day_BV = 0
@@ -863,47 +813,83 @@ def calculate_VIP():
                 continue
             start_date = story_start_date_map[user_story["id"]].replace(tzinfo=None)
             if story_finish_date_map[user_story["id"]] != None:
-                finish_date = datetime.fromisoformat(story_finish_date_map[user_story["id"]]).replace(tzinfo=None)
+                finish_date = datetime.fromisoformat(
+                    story_finish_date_map[user_story["id"]]
+                ).replace(tzinfo=None)
             else:
                 finish_date = None
 
-            if start_date.date() <= date.date() and (finish_date.date() == None or finish_date.date() > date.date()):
+            if start_date.date() <= date.date() and (
+                finish_date.date() == None or finish_date.date() > date.date()
+            ):
                 one_day_points += story_points_map[user_story["id"]]
                 one_day_BV += user_story_business_value_map[user_story["id"]]
 
-        data_points.append({
-            "date": date.strftime("%d %b %Y"), 
-            "user_story_points": one_day_points/total_points, 
-            "BV": one_day_BV/total_business_value
-            })
+        data_points.append(
+            {
+                "date": date.strftime("%d %b %Y"),
+                "user_story_points": one_day_points / total_points,
+                "BV": one_day_BV / total_business_value,
+            }
+        )
         one_day_points = 0
         one_day_BV = 0
-        
+
     return jsonify(data_points)
+
 
 @app.route("/business-value-auc", methods=["GET", "POST"])
 def get_business_value_auc_delta():
     if request.method == "GET":
-        sprintMapping, sprints = get_number_of_milestones(session['project_id'], session['auth_token'])
+        sprintMapping, sprints = get_number_of_milestones(
+            session["project_id"], session["auth_token"]
+        )
         auc_map = dict()
         sprint_bv_auc_delta = None
         for sprint_id in list(sprintMapping.values()):
-            running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(session['project_id'], sprint_id,
-                                                                                session['auth_token'])
+            running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(
+                session["project_id"], sprint_id, session["auth_token"]
+            )
             total_bv_for_sprint = list(ideal_bv_data.values())[0]
             if total_bv_for_sprint:
-                bv_auc_delta = (lambda : { item : round(abs(( total_bv_for_sprint - running_bv_data[item])/total_bv_for_sprint
-                                                            - (total_bv_for_sprint - ideal_bv_data[item])/total_bv_for_sprint), 2)
-                                          for item in running_bv_data.keys()})()
-                if sprint_id == session['sprint_id']:
+                bv_auc_delta = (
+                    lambda: {
+                        item: round(
+                            abs(
+                                (total_bv_for_sprint - running_bv_data[item])
+                                / total_bv_for_sprint
+                                - (total_bv_for_sprint - ideal_bv_data[item])
+                                / total_bv_for_sprint
+                            ),
+                            2,
+                        )
+                        for item in running_bv_data.keys()
+                    }
+                )()
+                if sprint_id == session["sprint_id"]:
                     sprint_bv_auc_delta = bv_auc_delta
                 auc_map[sprint_id] = sum(list(bv_auc_delta.values()))
             else:
                 auc_map[sprint_id] = 0
         auc = dict()
         for item in sprintMapping.items():
-            auc['Sprint ' + str(sprints - int(item[0]) + 1)] = auc_map[item[1]]*100
+            auc["Sprint " + str(sprints - int(item[0]) + 1)] = auc_map[item[1]] * 100
         auc_list = list(auc.items())
-        auc_list.sort(key = lambda x : x[0])
-        return render_template('value-auc-graph.html', bv_auc_delta=list(sprint_bv_auc_delta.items()), auc = auc_list)
-
+        auc_list.sort(key=lambda x: x[0])
+        return jsonify(
+            {
+                "auc": auc_list,
+                "auc_map": auc_map,
+                "sprintMapping": sprintMapping,
+                "sprints": sprints,
+                "bv_auc_delta": list(sprint_bv_auc_delta.items()),
+                "running_bv_data": running_bv_data,
+                "ideal_bv_data": ideal_bv_data,
+                "total_bv_for_sprint": total_bv_for_sprint,
+            }
+        )
+        # return render_template(
+        #     "value-auc-graph.html",
+        #     bv_auc_delta=list(sprint_bv_auc_delta.items()),
+        #     auc=auc_list,
+        # )
