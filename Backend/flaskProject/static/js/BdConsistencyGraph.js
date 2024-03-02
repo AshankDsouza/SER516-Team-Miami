@@ -37,7 +37,7 @@ async function getGraohData(){
 
         if(!response.ok) throw new Error('Failed fetch BD Graph Calculations!');
 
-        const chartData =  await partialWorkDoneChartResponse.json();
+        const chartData =  await response.json();
 
         bdConsistencyGraphConfig.data.labels = chartData.x_axis.map(date => {
             const dateObj = new Date(date);
@@ -46,7 +46,7 @@ async function getGraohData(){
 
         bdConsistencyGraphConfig.data.datasets[0].data = chartData.story_points_projection;
 
-        bdConsistencyGraphConfig.data.datasets[1].data = chartData.bv_projection;
+        bdConsistencyGraphConfig.data.datasets[1].data = Object.values(chartData.bv_projection);
 
         const ctx = document.getElementById('graph').getContext('2d');
         const consistencyChart = new Chart(ctx, bdConsistencyGraphConfig);
