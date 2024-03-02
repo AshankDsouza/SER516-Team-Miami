@@ -124,6 +124,7 @@ def metric_selection():
         if session["metric_selected"] == "burndown":
             return redirect("/burndown-graph")
 
+
         elif session["metric_selected"] == "cycle_time":
             return redirect("/cycle-time-graph")
 
@@ -133,11 +134,19 @@ def metric_selection():
         elif session["metric_selected"] == "Work_AUC":
             return redirect("/work-auc")
 
+
+
         elif session["metric_selected"] == "lead_time":
             return redirect("/lead-time-graph")
 
+
         elif session["metric_selected"] == "VIP":
             return redirect("/VIP")
+
+        
+        elif session['metric_selected'] == 'BD_Consistency':
+            return redirect('/bd-view')
+
 
         elif session["metric_selected"] == "Value_AUC":
             return redirect("/business-value-auc")
@@ -145,7 +154,9 @@ def metric_selection():
     return render_template("metric-selection.html")
 
 
-@app.route("/burndown-graph", methods=["GET"])
+
+@app.route('/burndown-graph', methods=['GET'])
+
 def burndown_graph():
     if "auth_token" not in session:
         return redirect("/")
@@ -257,10 +268,11 @@ def get_business_value_by_user_story(user_story):
     except requests.exceptions.RequestException as e:
         # Handle errors during the API request and print an error message
         print(f"Error fetching project by slug: {e}")
-        return redirect("/error")
 
+        return redirect('/error')
 
-@app.route("/lead-time-graph", methods=["GET"])
+@app.route('/lead-time-graph', methods=['GET'])      
+
 def lead_time_graph():
     if "auth_token" not in session:
         return redirect("/")
@@ -819,9 +831,9 @@ def calculate_VIP():
             else:
                 finish_date = None
 
-            if start_date.date() <= date.date() and (
-                finish_date.date() == None or finish_date.date() > date.date()
-            ):
+
+            if start_date.date() <= date.date() and (finish_date == None or finish_date.date() > date.date()):
+
                 one_day_points += story_points_map[user_story["id"]]
                 one_day_BV += user_story_business_value_map[user_story["id"]]
 
@@ -875,21 +887,90 @@ def get_business_value_auc_delta():
         for item in sprintMapping.items():
             auc["Sprint " + str(sprints - int(item[0]) + 1)] = auc_map[item[1]] * 100
         auc_list = list(auc.items())
-        auc_list.sort(key=lambda x: x[0])
-        return jsonify(
-            {
-                "auc": auc_list,
-                "auc_map": auc_map,
-                "sprintMapping": sprintMapping,
-                "sprints": sprints,
-                "bv_auc_delta": list(sprint_bv_auc_delta.items()),
-                "running_bv_data": running_bv_data,
-                "ideal_bv_data": ideal_bv_data,
-                "total_bv_for_sprint": total_bv_for_sprint,
-            }
-        )
-        # return render_template(
-        #     "value-auc-graph.html",
-        #     bv_auc_delta=list(sprint_bv_auc_delta.items()),
-        #     auc=auc_list,
-        # )
+
+        auc_list.sort(key = lambda x : x[0])
+        return render_template('value-auc-graph.html', bv_auc_delta=list(sprint_bv_auc_delta.items()), auc = auc_list)
+
+
+
+@app.route("/bd-view", methods=["GET"])
+def render_bd_page():
+    if "auth_token" not in session:
+        return redirect('/')
+
+    if 'project_id' not in session:
+        return redirect('/slug-input')
+
+    if 'sprint_id' not in session:
+        return redirect('/sprint-selection')
+
+    return render_template("BD-Consistency-graph.html")
+
+@app.route("/bd-calculation", methods=["GET"])
+def bd_calculations():
+    if "auth_token" not in session:
+        return redirect('/')
+
+    if 'project_id' in session:
+        project_id = session['project_id']
+
+    if 'sprint_id' in session:
+        sprint_id = session['sprint_id']
+
+    if((not project_id) or (not sprint_id)):
+        return 'Invalid request!'
+    
+    # Data required to plot is stored here
+    data_to_plot = { 
+            "total_story_points": 0,
+            "x_axis": [],
+            "bv_projection": [],
+            "story_points_projection": []
+    }
+
+    milestone = get_milestones_by_sprint(project_id, sprint_id, session["auth_token"])
+
+    for user_story in milestone["user_stories"]:
+        if user_story["total_points"] == None: 
+            continue
+
+        data_to_plot["total_story_points"] += int(user_story["total_points"])
+            
+    start_date  = datetime.strptime(milestone["estimated_start"], '%Y-%m-%d')
+    end_date = datetime.strptime(milestone["estimated_finish"], '%Y-%m-%d')
+
+    data_to_plot["x_axis"] = [(start_date + timedelta(days=day)).strftime("%d %b %Y") for day in range((end_date - start_date).days + 1)]
+
+    for index in range(0, len(data_to_plot["x_axis"])):
+        current_processing_date = data_to_plot["x_axis"][index]
+        current_processing_date_points = 0
+
+        if index <= 0:
+            current_processing_date_points = data_to_plot["total_story_points"]
+        else:
+            current_processing_date_points = data_to_plot["story_points_projection"][index - 1]
+
+        total_points_completed = 0
+        for user_story in milestone["user_stories"]:
+            if(user_story["finish_date"] == None or user_story["total_points"] == None):
+                continue
+
+            finish_date = datetime.fromisoformat(user_story["finish_date"]).strftime("%d %b %Y")
+                    
+            if(finish_date != current_processing_date):
+                continue
+
+            total_points_completed = user_story["total_points"] + total_points_completed
+
+        data_to_plot["story_points_projection"].append(round(current_processing_date_points - total_points_completed, 1))
+
+    running_bv_data, _ = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'], session['auth_token'])
+    data_to_plot['bv_projection'] = running_bv_data
+
+    return json.dumps(data_to_plot)
+
+        
+    #data needs for calculation
+    #running_bv_data, ideal_bv_data, data_to_plot["actual_projection"], data_to_plot["totla_story_points"]
+        
+
