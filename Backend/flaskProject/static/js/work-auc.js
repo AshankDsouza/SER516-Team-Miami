@@ -6,8 +6,8 @@ const work_auc_chart_config = {
             {
                 label: 'Work AUC',
                 data: [],
-                borderColor: '#ff8fa7',
-                backgroundColor: '#ff8fa7',
+                // borderColor: '#ff8fa7',
+                // backgroundColor: '#ff8fa7',
             }
         ]
     },
@@ -17,7 +17,7 @@ const work_auc_chart_config = {
             x: {
                 title: {
                     display: true,
-                    text: 'Date',
+                    text: 'Sprints',
                     font: { size: 15 },
                 },
             },
@@ -25,7 +25,7 @@ const work_auc_chart_config = {
                 beginAtZero: true,
                 title: {
                     display: true,
-                    text: 'Delta',
+                    text: 'AUC in percentage',
                     font: { size: 15 },
                 },
 
