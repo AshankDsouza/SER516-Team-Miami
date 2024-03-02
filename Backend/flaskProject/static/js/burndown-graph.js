@@ -45,10 +45,16 @@ const totalWorkDoneChartConfig = {
         labels: [],
         datasets: [
             {
+                label: 'Ideal Values',
+                data: [],
+                borderColor: 'green',
+                fill: true
+            },
+            {
                 label: 'Actual Values',
                 data: [],
                 borderColor: 'blue',
-                fill: false
+                fill: true
             }
         ]
     },
@@ -104,7 +110,9 @@ async function getGraphData(){
             return `${dateObj.getDate()} ${dateObj.toLocaleDateString('default', { month: 'short' })}`
         });
 
-        totalWorkDoneChartConfig.data.datasets[0].data = totalWorkDoneChartData.actual_projection;
+        totalWorkDoneChartConfig.data.datasets[0].data = totalWorkDoneChartData.ideal_projection;
+
+        totalWorkDoneChartConfig.data.datasets[1].data = totalWorkDoneChartData.actual_projection;
         
         // ---------------------------
         
@@ -130,15 +138,19 @@ $(function () {
             new Chart($('#business-value-chart'), {
                 type: 'line',
                 data: {
-                    labels: ['29 Jan', '30 Jan', '31 Jan', '01 Feb', '02 Feb', '03 Feb', '04 Feb',
-                        '05 Feb', '06 Feb', '07 Feb', '08 Feb', '09 Feb', '10 Feb', '11 Feb',
-                        '12 Feb', '13 Feb', '14 Feb', '15 Feb', '16 Feb', '17 Feb', '18 Feb'],
+                    labels: response[0].map(entry => entry[0]),
                     datasets: [
                         {
-                            label: 'Business Value Delivered by Date',
-                            data: response,
+                            label: 'Actual Business Value Delivered by Date',
+                            data: response[0].map(entry => entry[1]),
                             borderColor: '#ff0000',
                             backgroundColor: '#ff008c',
+                        },
+                        {
+                            label: 'Ideal Business Value Delivered by Date',
+                            data: response[1].map(entry => entry[1]),
+                            borderColor: '#ffc800',
+                            backgroundColor: '#ffc800',
                         }
                     ]
                 },

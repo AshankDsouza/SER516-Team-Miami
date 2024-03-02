@@ -18,9 +18,10 @@
     <link rel="shortcut icon" type="image/x-icon" href="{{url_for('static', filename='img/logo.jpeg')}}" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+
 <body>
     <div style="display: none;">
-        <div class="loading-container d-flex justify-content-center align-items-center" >
+        <div class="loading-container d-flex justify-content-center align-items-center">
             <div class="spinner-grow" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
@@ -32,31 +33,17 @@
     <main class="flex-container">
         <section class="flex-items">
             <div class="flex-item">
-                <h2>Partial Work Done Graph</h2>
+                <h2>Work AUC Graph</h2>
                 <div class="graph-container">
-                    <canvas id="partial-work-done-chart"></canvas>
-                </div>
-            </div>
-
-            <div class="flex-item">
-                <h2>Total work Done Graph</h2>
-                <div class="graph-container">
-                    <canvas id="total-work-done-chart"></canvas>
-                </div>
-            </div>
-
-            <div class="flex-item">
-                <h2>Business Value Burndown Graph</h2>
-                <div class="graph-container">
-                    <canvas id="business-value-chart"></canvas>
+                    <canvas id="work_auc_chart"></canvas>
                 </div>
             </div>
         </section>
     </main>
 
     {% include 'commons/footer.html' %}
-
 </body>
-<script src="../static/js/burndown-graph.js"></script>
+
+<script src="../static/js/work-auc.js"></script>
 
 </html>

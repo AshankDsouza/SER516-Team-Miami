@@ -32,31 +32,18 @@
     <main class="flex-container">
         <section class="flex-items">
             <div class="flex-item">
-                <h2>Partial Work Done Graph</h2>
+                <h2>BD Consistency Graph</h2>
                 <div class="graph-container">
-                    <canvas id="partial-work-done-chart"></canvas>
-                </div>
-            </div>
-
-            <div class="flex-item">
-                <h2>Total work Done Graph</h2>
-                <div class="graph-container">
-                    <canvas id="total-work-done-chart"></canvas>
-                </div>
-            </div>
-
-            <div class="flex-item">
-                <h2>Business Value Burndown Graph</h2>
-                <div class="graph-container">
-                    <canvas id="business-value-chart"></canvas>
+                    <canvas id="graph"></canvas>
                 </div>
             </div>
         </section>
     </main>
 
     {% include 'commons/footer.html' %}
+    
 
 </body>
-<script src="../static/js/burndown-graph.js"></script>
+<script src="../static/js/BdConsistencyGraph.js"></script>
 
 </html>

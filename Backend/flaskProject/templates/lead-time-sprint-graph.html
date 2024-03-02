@@ -22,111 +22,102 @@
     <link rel="stylesheet" href="{{url_for('static', filename='css/lead_time.css')}}">
     <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Add some basic styling */
-        canvas {
-            display: block;
-            margin: 0 auto;
-        }
-    </style>
 </head>
 
 <body>
 
-    <header>
-        <nav class="navbar bg-body-tertiary m-2 p-0 mt-1 mb-0">
-            <div class="container-fluid">
-                <div class="logo-container d-flex flex-row align-items-center">
-                    <a class="navbar-brand" href="#">
-                        <img src="../static/img/team-miaim-logo.jpeg" alt="Logo" width="50" height="44"
-                                class="d-inline-block align-text-top">
-                    </a>
-                    <p class="logo-name">Team Miami</p>
-                </div>
-                <div class="d-flex flex-row align-items-center">
-                    <button class="navbar-toggler p-3 log-out-container slug-submit-btn" type="button" data-bs-toggle="offcanvas"
-                            data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" id = "log-out-btn"
-                            aria-label="Toggle navigation">
-                            <i class="bi bi-box-arrow-left logout-icon"></i>
-                            <p class="log-out-text ms-1">Logout</p>
-                        </button>
-                </div>
-            </div>
-        </nav>
-    </header>
+    {% include 'commons/nav-bar.html' %}
+
     {% if not lead_times_for_sprint %}
     <p class="no-data-message">There are no closed tasks for the Sprint.Please select a different sprint</p>
     {% else %}
-    <!-- Create a canvas element where the chart will be rendered -->
-    <canvas id="myChart" width="600" height="400"></canvas>
+
+    <div class="flex-cont">
+      <div class="container">
+          <h1 class="text-center">Lead Time Graph</h1>
+          <h2 class="text-center" id="loading" style="display: none;">Loading...</h2>
+      </div>
+  
+  
+      <!-- Chart -->
+      <div class="graph-container">
+          <canvas id="myChart"></canvas>
+      </div>
+    </div>
     {% endif %}
 
-    <script>
-        // Parse JSON data
-    var jsonData = JSON.parse('{{ lead_times_for_sprint | tojson | safe}}');
+    {% include 'commons/footer.html' %}
 
-    // Extract id and lead_time values from JSON data
-    var ids = jsonData.map(obj => obj.id);
-    var leadTimes = jsonData.map(obj => obj.lead_time);
-    var createdDates = jsonData.map(entry => entry.created_date);
-    var finishedDates = jsonData.map(entry => entry.finished_date);
-    var subjects = jsonData.map(entry => entry.subject);
-    console.log(subjects);
-    console.log(createdDates);
-    console.log(finishedDates);
 
-    // Get the canvas element
-    var ctx = document.getElementById('myChart').getContext('2d');
+</body>
 
-    // Create the chart
-    var myChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ids,
-        datasets: [{
-          label: 'Lead Time',
-          data: leadTimes,
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
 
-        }]
-      },
-      options: {
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                  var tooltipMessage = []
-                tooltipMessage.push('Lead Time: ' + context.formattedValue + ' Days');
-                tooltipMessage.push('Created Date: ' + createdDates[context.dataIndex]);
-                tooltipMessage.push('Finished Date: ' + finishedDates[context.dataIndex]);
-                tooltipMessage.push('Subject: ' + subjects[context.dataIndex]);
-                return tooltipMessage;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'SprintIds'
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Days'
-            },
-            ticks: {
-              beginAtZero: true
-            }
-          }
+<script>
+  // Parse JSON data
+var jsonData = JSON.parse('{{ lead_times_for_sprint | tojson | safe}}');
+
+// Extract id and lead_time values from JSON data
+var ids = jsonData.map(obj => obj.ref);
+var leadTimes = jsonData.map(obj => obj.lead_time);
+var createdDates = jsonData.map(entry => entry.created_date);
+var finishedDates = jsonData.map(entry => entry.finished_date);
+var subjects = jsonData.map(entry => entry.subject);
+console.log(ids);
+console.log(subjects);
+console.log(createdDates);
+console.log(finishedDates);
+
+// Get the canvas element
+var ctx = document.getElementById('myChart').getContext('2d');
+
+// Create the chart
+var myChart = new Chart(ctx, {
+type: 'bar',
+data: {
+  labels: ids,
+  datasets: [{
+    label: 'Lead Time',
+    data: leadTimes,
+    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+    borderColor: 'rgba(54, 162, 235, 1)',
+    borderWidth: 1,
+
+  }]
+},
+options: {
+  plugins: {
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+            var tooltipMessage = []
+          tooltipMessage.push('Lead Time: ' + context.formattedValue + ' Days');
+          tooltipMessage.push('Created Date: ' + createdDates[context.dataIndex]);
+          tooltipMessage.push('Finished Date: ' + finishedDates[context.dataIndex]);
+          tooltipMessage.push('Subject: ' + subjects[context.dataIndex]);
+          return tooltipMessage;
         }
       }
-    });
-    </script>
-</body>
+    }
+  },
+  scales: {
+    x: {
+      title: {
+        display: true,
+        text: 'TaskIds'
+      }
+    },
+    y: {
+      title: {
+        display: true,
+        text: 'Days'
+      },
+      ticks: {
+        beginAtZero: true
+      }
+    }
+  }
+}
+});
+</script>
 
 </html>

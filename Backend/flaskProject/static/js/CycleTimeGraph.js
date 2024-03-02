@@ -43,8 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function sendData(event) {
         event.preventDefault();
+        document.getElementById('loading').style.display = 'block';
         var task_ids = document.getElementById('task_ids').value;
         var task_ids_list = task_ids.split(',').map(Number);
+        console.log(task_ids_list);
         fetch('/cycle-time-graph', {
             method: 'POST',
             headers: {
@@ -66,7 +68,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     borderWidth: 1
                 }]
             }
-            myChart.update();});
+            myChart.update();
+            document.getElementById('loading').style.display = 'none';});
             console.log(myChart.data);
         
         }  
