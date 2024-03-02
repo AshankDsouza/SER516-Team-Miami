@@ -44,40 +44,48 @@
     </header>
 
     <!-- Title -->
-    <div class="container">
-        <h1 class="text-center">Cycle Time Graph</h1>
-        <h2 class="text-center" id="loading" style="display: none;">Loading...</h2>
-    </div>
-
-
-    <!-- Chart -->
-    <div class="graph-container">
-        <canvas id="myChart"></canvas>
-    </div>
+    <div class="flex-cont">
+        <div class="container">
+            <h1 class="text-center">Cycle Time Graph</h1>
+            <h2 class="text-center" id="loading" style="display: none;">Loading...</h2>
+        </div>
     
-    <div class = "container text-center">
-        <h3>Closed tasks in the sprint: </h3>
-        <div>
-        {% for task in closed_tasks %}
-            {{ task }}{% if not loop.last %}, {% endif %}
-        {% endfor %}
-        <div>
+    
+        <!-- Chart -->
+        <div class="graph-container">
+            <canvas id="myChart"></canvas>
+        </div>
+        
+        <div class = "container text-center">
+            <h3>Closed tasks in the sprint: </h3>
+            <div>
+            {% for task in closed_tasks %}
+                {{ task }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+            </div>
+        </div>
+    
+    </br>
+        <div class="container"> 
+            <form class="text-center" id = "task_selection">
+                <label for = "task_ids"><h3>Task ids (separeted by ", ") </h3></label>
+                <input type="text" id="task_ids" name="task_ids" required>
+                <button type="submit" class="btn btn-light btn-m mt-3 slug-submit-btn">Submit</button>
+            </form>
+    
+        </div>
+        </div>
     </div>
 
-</br>
-    <div class="container"> 
-        <form class="text-center" id = "task_selection">
-            <label for = "task_ids"><h3>Task ids (separeted by ", ") </h3></label>
-            <input type="text" id="task_ids" name="task_ids" required>
-            <button type="submit" class="btn btn-light btn-m mt-3 slug-submit-btn">Submit</button>
-        </form>
-
-    </div>
 
     <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Include your JavaScript file -->
     <script src="../static/js/CycleTimeGraph.js"></script>
+
+    <footer class="footer">
+        <img src="../static/img/yellow-wave.png" alt="">
+    </footer>
 </body>
 
 </html>
