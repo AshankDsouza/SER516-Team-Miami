@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import os
 import json
 from datetime import datetime, timedelta
-
 from taigaApi.authenticate import authenticate
 from taigaApi.project.getProjectBySlug import get_project_by_slug
 from taigaApi.project.getProjectTaskStatusName import get_project_task_status_name
@@ -39,6 +38,8 @@ from taigaApi.userStory.getUserStory import get_user_story_start_date
 import secrets
 import requests
 from threading import Thread
+import sqlite3
+import time
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -308,25 +309,62 @@ def cycle_time_graph():
         return redirect("/")
     if request.method == "POST":
         # The data should be sent by fetch and POST method in JSON format
-        closed_tasks_ids = request.json["closed_tasks_ids"]
 
-        closed_tasks_selected = []
-        if closed_tasks_ids == [0]:
-            closed_tasks_selected = session["closed_tasks_in_a_sprint"]
+        #Check if the database exists and if the database still valid
+        database_name = 'sprint_{}_project_{}.db'.format(session["sprint_id"], session["project_id"])
+        database_path = os.path.join(app.root_path, database_name)
+
+        if os.path.exists(database_path):
+            current_time = time.time()
+            creation_time = os.path.getctime(database_path)
+            difference = (current_time - creation_time) / 60
+            if difference <= 30:
+                #retrieve data from 
+                result = []
+                conn = sqlite3.connect(database_path)
+                c = conn.cursor()
+                c.execute('SELECT * FROM cycle_times')
+                entries = c.fetchall()
+                result = [{'task_id': entry[0], 'cycle_time': entry[1]} for entry in entries]
+                return jsonify(result)
+    
         else:
-            closed_tasks_selected = [
-                task
-                for task in session["closed_tasks_in_a_sprint"]
-                if task["ref"] in closed_tasks_ids
-            ]
+            #create database
+            conn = sqlite3.connect(database_path)
+            c = conn.cursor()
+            closed_tasks_ids = request.json["closed_tasks_ids"]
 
-        # fetch data from taiga api
-        if closed_tasks_selected != None:
-            return jsonify(
-                calculate_cycle_times_for_tasks(
+            closed_tasks_selected = []
+            if closed_tasks_ids == [0]:
+                closed_tasks_selected = session["closed_tasks_in_a_sprint"]
+            else:
+                closed_tasks_selected = [
+                    task
+                    for task in session["closed_tasks_in_a_sprint"]
+                    if task["ref"] in closed_tasks_ids
+                ]
+
+            # fetch data from taiga api
+            if closed_tasks_selected != None:
+
+                result = calculate_cycle_times_for_tasks(
                     closed_tasks_selected, session["auth_token"]
                 )
-            )
+                c.execute('''
+                    CREATE TABLE IF NOT EXISTS cycle_times (
+                        id TEXT PRIMARY KEY,
+                        cycle_time REAL NOT NULL
+                        )
+                    ''')
+                for entry in result:
+                    c.execute('INSERT INTO cycletimes (id, cycle_time) VALUES (?, ?)', (entry['task_id'], entry['cycle_time']))
+                conn.commit()
+                conn.close()
+                return jsonify(
+                    result
+                )
+            conn.commit()
+            conn.close()
 
 
 @app.route("/partial-work-done-chart", methods=["GET"])
@@ -969,8 +1007,4 @@ def bd_calculations():
 
     return json.dumps(data_to_plot)
 
-        
-    #data needs for calculation
-    #running_bv_data, ideal_bv_data, data_to_plot["actual_projection"], data_to_plot["totla_story_points"]
-        
 
