@@ -43,7 +43,6 @@ from threading import Thread
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-
 @app.route("/", methods=["GET", "POST"])
 def loginPage():
     if "auth_token" in session:
@@ -134,29 +133,26 @@ def metric_selection():
         elif session["metric_selected"] == "Work_AUC":
             return redirect("/work-auc")
 
-
-
         elif session["metric_selected"] == "lead_time":
             return redirect("/lead-time-graph")
-
 
         elif session["metric_selected"] == "VIP":
             return redirect("/VIP")
 
-        
         elif session['metric_selected'] == 'BD_Consistency':
             return redirect('/bd-view')
 
-
         elif session["metric_selected"] == "Value_AUC":
             return redirect("/business-value-auc")
+        
+        elif session["metric_selected"] == "multiple_bd":
+            return redirect("/multiple-bd")
 
     return render_template("metric-selection.html")
 
 
 
 @app.route('/burndown-graph', methods=['GET'])
-
 def burndown_graph():
     if "auth_token" not in session:
         return redirect("/")
@@ -168,75 +164,6 @@ def burndown_graph():
         return redirect("/metric-selection")
 
     return render_template("burndown-graph.html")
-
-
-# TODO: Depricated (Endpoint not in use)
-@app.route("/burndown-metric-parameter", methods=["GET", "POST"])
-def burndown_metric_parameter():
-    if "auth_token" not in session:
-        return redirect("/")
-
-    if request.method == "POST":
-        parameter = request.form.get("workOption")
-        if parameter == "businessValues":
-            return redirect("/burndown-bv")
-        return redirect("/burndown-metric_configuration")  # just a placeholder
-
-    return render_template("burndown-metric_configuration.html")
-
-
-# TODO: Depricated (Endpoint not in use)
-@app.route("/work-done-chart", methods=["GET"])
-def work_done_chart():
-    if "auth_token" not in session:
-        return redirect("/")
-
-    auth_token = session["auth_token"]
-    taiga_url = os.getenv("TAIGA_URL")
-
-    print(request.args)
-
-    project_id = request.args.get("projectid")
-    sprint_id = request.args.get("sprintid")
-
-    if (not project_id) or (not sprint_id):
-        return "Invalid request!"
-
-    milestones_api_url = f"{taiga_url}/milestones/{sprint_id}?project={project_id}"
-    taks_api_url = f"{taiga_url}/tasks?project={project_id}"
-
-    # Define headers including the authorization token and content type
-    headers = {
-        "Authorization": f"Bearer {auth_token}",
-        "Content-Type": "application/json",
-    }
-
-    try:
-        # Make a GET request to Taiga API to retrieve user stories
-        mailstones_res = requests.get(milestones_api_url, headers=headers)
-        mailstones_res.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-
-        # Extracting information from the mailstones_res
-        milestone = mailstones_res.json()
-
-        # Make a GET request to Taiga API to retrieve tasks
-        tasks_res = requests.get(taks_api_url, headers=headers)
-        tasks_res.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-
-        # Extracting information from the tasks_res
-        tasks = tasks_res.json()
-
-        for user_story in milestone["user_stories"]:
-            if user_story["total_points"] == None:
-                continue
-
-        print(json.dumps({"milestone": milestone, "tasks": tasks}, indent=2))
-
-        return json.dumps(milestone)
-    except requests.exceptions.RequestException as e:
-        # Handle errors during the API request and print an error message
-        print(f"Error fetching project by slug: {e}")
-        return redirect("/error")
 
 
 @app.route("/<user_story>/get-business-value", methods=["GET"])
@@ -271,8 +198,8 @@ def get_business_value_by_user_story(user_story):
 
         return redirect('/error')
 
-@app.route('/lead-time-graph', methods=['GET'])      
 
+@app.route('/lead-time-graph', methods=['GET'])      
 def lead_time_graph():
     if "auth_token" not in session:
         return redirect("/")
@@ -892,7 +819,6 @@ def get_business_value_auc_delta():
         return render_template('value-auc-graph.html', bv_auc_delta=list(sprint_bv_auc_delta.items()), auc = auc_list)
 
 
-
 @app.route("/bd-view", methods=["GET"])
 def render_bd_page():
     if "auth_token" not in session:
@@ -905,6 +831,7 @@ def render_bd_page():
         return redirect('/sprint-selection')
 
     return render_template("BD-Consistency-graph.html")
+
 
 @app.route("/bd-calculation", methods=["GET"])
 def bd_calculations():
@@ -974,3 +901,15 @@ def bd_calculations():
     #running_bv_data, ideal_bv_data, data_to_plot["actual_projection"], data_to_plot["totla_story_points"]
         
 
+@app.route("/multiple-bd", methods=["GET"])
+def render_multiple_bd_page():
+    if "auth_token" not in session:
+        return redirect('/')
+
+    if 'project_id' not in session:
+        return redirect('/slug-input')
+
+    if 'sprint_id' not in session:
+        return redirect('/sprint-selection')
+
+    return render_template("multiple-bd.html")
