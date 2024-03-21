@@ -357,7 +357,7 @@ def cycle_time_graph():
                         )
                     ''')
                 for entry in result:
-                    c.execute('INSERT INTO cycletimes (id, cycle_time) VALUES (?, ?)', (entry['task_id'], entry['cycle_time']))
+                    c.execute('INSERT INTO cycle_times (id, cycle_time) VALUES (?, ?)', (entry['task_id'], entry['cycle_time']))
                 conn.commit()
                 conn.close()
                 return jsonify(

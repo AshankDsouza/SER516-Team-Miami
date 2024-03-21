@@ -48,9 +48,7 @@
         <div class="container"> 
             <form class="text-center" id = "task_selection">
                 <label for = "task_ids"><h3>Task ids (separeted by ", ") </h3></label>
-                <input type="text" id="task_ids" name="task_ids" value="{% for task in closed_tasks %}
-                {{ task }}{% if not loop.last %}, {% endif %}
-            {% endfor %}" required>
+                <input type="text" id="task_ids" name="task_ids" value="{{ closed_tasks|join(', ')}}" required>
                 <button type="submit" class="btn btn-light btn-m mt-3 slug-submit-btn">Submit</button>
             </form>
     
