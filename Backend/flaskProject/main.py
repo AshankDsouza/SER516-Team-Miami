@@ -242,32 +242,83 @@ def cycle_time_graph_get():
     return render_template("CycleTimeGraph.html", closed_tasks=in_sprint_ids)
 
 
+@app.route("/cycle-time-graph", methods=["GET"])
+def cycle_time_graph_get():
+    if "auth_token" not in session:
+        return redirect("/")
+    # show users all the closed tasks in the selected sprint
+
+    closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(
+        session["project_id"], session["sprint_id"], session["auth_token"]
+    )
+    session["closed_tasks_in_a_sprint"] = closed_tasks_in_a_spirnt
+
+    in_sprint_ids = [task["ref"] for task in closed_tasks_in_a_spirnt]
+    return render_template("CycleTimeGraph.html", closed_tasks=in_sprint_ids)
+
+
 @app.route("/cycle-time-graph", methods=["POST"])
 def cycle_time_graph():
     if "auth_token" not in session:
         return redirect("/")
     if request.method == "POST":
         # The data should be sent by fetch and POST method in JSON format
-        closed_tasks_ids = request.json["closed_tasks_ids"]
 
-        closed_tasks_selected = []
-        if closed_tasks_ids == [0]:
-            closed_tasks_selected = session["closed_tasks_in_a_sprint"]
+        #Check if the database exists and if the database still valid
+        database_name = 'sprint_{}_project_{}.db'.format(session["sprint_id"], session["project_id"])
+        database_path = os.path.join(app.root_path, database_name)
+
+        if os.path.exists(database_path):
+            current_time = time.time()
+            creation_time = os.path.getctime(database_path)
+            difference = (current_time - creation_time) / 60
+            if difference <= 30:
+                #retrieve data from 
+                result = []
+                conn = sqlite3.connect(database_path)
+                c = conn.cursor()
+                c.execute('SELECT * FROM cycle_times')
+                entries = c.fetchall()
+                result = [{'task_id': entry[0], 'cycle_time': entry[1]} for entry in entries]
+                return jsonify(result)
+    
         else:
-            closed_tasks_selected = [
-                task
-                for task in session["closed_tasks_in_a_sprint"]
-                if task["ref"] in closed_tasks_ids
-            ]
+            #create database
+            conn = sqlite3.connect(database_path)
+            c = conn.cursor()
+            closed_tasks_ids = request.json["closed_tasks_ids"]
 
-        # fetch data from taiga api
-        if closed_tasks_selected != None:
-            return jsonify(
-                calculate_cycle_times_for_tasks(
+            closed_tasks_selected = []
+            if closed_tasks_ids == [0]:
+                closed_tasks_selected = session["closed_tasks_in_a_sprint"]
+            else:
+                closed_tasks_selected = [
+                    task
+                    for task in session["closed_tasks_in_a_sprint"]
+                    if task["ref"] in closed_tasks_ids
+                ]
+
+            # fetch data from taiga api
+            if closed_tasks_selected != None:
+
+                result = calculate_cycle_times_for_tasks(
                     closed_tasks_selected, session["auth_token"]
                 )
-            )
-
+                c.execute('''
+                    CREATE TABLE IF NOT EXISTS cycle_times (
+                        id TEXT PRIMARY KEY,
+                        cycle_time REAL NOT NULL
+                        )
+                    ''')
+                for entry in result:
+                    c.execute('INSERT INTO cycle_times (id, cycle_time) VALUES (?, ?)', (entry['task_id'], entry['cycle_time']))
+                conn.commit()
+                conn.close()
+                return jsonify(
+                    result
+                )
+            conn.commit()
+            conn.close()
 
 @app.route("/partial-work-done-chart", methods=["GET"])
 def partial_work_done_chart():
