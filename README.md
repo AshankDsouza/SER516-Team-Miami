@@ -25,6 +25,12 @@ This project is built using python for interacting with the Taiga API to perform
    start_for_windows.bat
    ```
 
+   OR
+
+   Use docker. The command to build and run a docker container is same for Mac, Linux and Windows.
+   ```bash
+   docker-compose up --build
+   ```
 
 ## Getting Taiga Project Slug
 
