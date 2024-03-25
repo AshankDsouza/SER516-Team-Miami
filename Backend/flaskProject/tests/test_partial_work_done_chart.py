@@ -37,7 +37,7 @@ class TestPartialWorkDoneChart(unittest.TestCase):
         self.assertIn("y_axis", data)
         self.assertIn("ideal_projection", data)
         self.assertIn("actual_projection", data)
-        self.assertEqual(len(data["x_axis"]), 10)  
+        self.assertEqual(len(data["x_axis"]), 10)
 
     @patch('main.get_milestones_by_sprint')
     def test_partial_work_done_chart_no_auth_token(self, mock_get_milestones_by_sprint):
@@ -45,8 +45,24 @@ class TestPartialWorkDoneChart(unittest.TestCase):
 
         response = self.app.get('/fake_project_id/1/partial-work-done-chart')
 
-        self.assertEqual(response.status_code, 302) 
-        self.assertEqual(response.location, 'http://localhost/')  
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, 'http://localhost/')
+
+    def test_no_project_id_in_session(self):
+        session['auth_token'] = 'fake_auth_token'
+        session.pop('project_id', None)
+
+        response = self.app.get('/fake_project_id/1/partial-work-done-chart')
+
+        self.assertEqual(response.status_code, 200)  
+
+    def test_no_sprint_id_in_session(self):
+        session['auth_token'] = 'fake_auth_token'
+        session.pop('sprint_selected', None)
+
+        response = self.app.get('/fake_project_id/1/partial-work-done-chart')
+
+        self.assertEqual(response.status_code, 200)  
 
 if __name__ == '__main__':
     unittest.main()
