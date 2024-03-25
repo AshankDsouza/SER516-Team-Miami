@@ -43,7 +43,7 @@ def get_business_value_id(project_id, auth_token):
         return None
 
 # Gets the ideal and actual Business value delivered for sprint
-def get_business_value_data_for_sprint(project_id, sprint_id, auth_token):
+def get_business_value_data_for_sprint(project_id, sprint_id, auth_token, result_store = None, key = None):
     business_value_id = get_business_value_id(project_id, auth_token)
     user_stories = get_userstories_for_milestones([sprint_id], auth_token)[0]
     get_userstory_ids = lambda: [userstory['id'] for userstory in user_stories]
@@ -52,6 +52,10 @@ def get_business_value_data_for_sprint(project_id, sprint_id, auth_token):
     milestone_stats = get_milestone_stats_by_sprint(sprint_id, auth_token)
     sprint_days = (lambda : [day['day'] for day in milestone_stats['days']])()
     running_bv_data, ideal_bv_data = build_business_value_data(user_stories, custom_attribute_values, business_value_id, sprint_days)
+
+    if result_store != None and key != None:
+        result_store[key]['business_value'] = running_bv_data
+
     return running_bv_data, ideal_bv_data
 
 # Builds the ideal and actual business value data objects
