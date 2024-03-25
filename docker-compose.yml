@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  flask_app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - TAIGA_URL=https://api.taiga.io/api/v1
+    volumes:
+      - .:/app
+    working_dir: /app/Backend
