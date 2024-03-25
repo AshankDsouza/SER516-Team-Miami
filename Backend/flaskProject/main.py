@@ -1,3 +1,5 @@
+import sqlite3
+import time
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import os
 import json
@@ -227,21 +229,6 @@ def lead_time_graph():
 
 # fetch data and calculate cycle time of tasks or user stories selected and display graph.
 # This is not average cycle time.
-@app.route("/cycle-time-graph", methods=["GET"])
-def cycle_time_graph_get():
-    if "auth_token" not in session:
-        return redirect("/")
-    # show users all the closed tasks in the selected sprint
-
-    closed_tasks_in_a_spirnt = get_closed_tasks_for_a_sprint(
-        session["project_id"], session["sprint_id"], session["auth_token"]
-    )
-    session["closed_tasks_in_a_sprint"] = closed_tasks_in_a_spirnt
-
-    in_sprint_ids = [task["ref"] for task in closed_tasks_in_a_spirnt]
-    return render_template("CycleTimeGraph.html", closed_tasks=in_sprint_ids)
-
-
 @app.route("/cycle-time-graph", methods=["GET"])
 def cycle_time_graph_get():
     if "auth_token" not in session:
