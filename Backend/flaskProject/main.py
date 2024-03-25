@@ -16,6 +16,7 @@ from taigaApi.task.getTasks import (
     get_one_closed_task,
     get_tasks,
     get_closed_tasks_for_a_sprint,
+    get_lead_times_for_arbitrary_timeframe
 )
 from taigaApi.project.getProjectMilestones import (
     get_number_of_milestones,
@@ -86,12 +87,12 @@ def slug_input():
         if project_info == None:
             return render_template("slug-input.html", error=True)
 
-        if "sprint_mapping" in session:     
+        if "sprint_mapping" in session:
             del session["sprint_mapping"]
 
-        if "total_sprints" in session:     
+        if "total_sprints" in session:
             del session["total_sprints"]
-    
+
         session["project_id"] = project_info["id"]
 
         return redirect("/sprint-selection")
@@ -125,48 +126,6 @@ def sprint_selection():
     return render_template("sprint-selection.html", total_sprints=session["total_sprints"])
 
 
-@app.route("/metric-selection", methods=["GET", "POST"])
-def metric_selection():
-    if "auth_token" not in session:
-        return redirect("/")
-
-    if request.method == "POST":
-        session["metric_selected"] = request.form.get("selectionOption")
-        if session["metric_selected"] == "burndown":
-            return redirect("/burndown-graph")
-
-
-        elif session["metric_selected"] == "cycle_time":
-            return redirect("/cycle-time-graph")
-
-        elif session["metric_selected"] == "lead_time":
-            return redirect("/lead-time-graph")
-
-        elif session["metric_selected"] == "Work_AUC":
-            return redirect("/work-auc")
-
-        elif session["metric_selected"] == "lead_time":
-            return redirect("/lead-time-graph")
-
-        elif session["metric_selected"] == "VIP":
-            return redirect("/VIP")
-
-        elif session['metric_selected'] == 'BD_Consistency':
-            return redirect('/bd-view')
-
-        elif session["metric_selected"] == "Value_AUC":
-            return redirect("/business-value-auc")
-        
-        elif session["metric_selected"] == "multiple_bd":
-            return redirect("/multiple-bd")
-        
-        elif session["metric_selected"] == "multisprint_bd":
-            return redirect("/multi-sprint-bd")
-
-    return render_template("metric-selection.html")
-
-
-
 @app.route('/burndown-graph', methods=['GET'])
 def burndown_graph():
     if "auth_token" not in session:
@@ -179,6 +138,7 @@ def burndown_graph():
         return redirect("/metric-selection")
 
     return render_template("burndown-graph.html")
+
 
 
 @app.route("/<user_story>/get-business-value", methods=["GET"])
@@ -214,7 +174,7 @@ def get_business_value_by_user_story(user_story):
         return redirect('/error')
 
 
-@app.route('/lead-time-graph', methods=['GET'])      
+@app.route('/lead-time-graph', methods=['GET'])
 def lead_time_graph():
     if "auth_token" not in session:
         return redirect("/")
@@ -227,8 +187,6 @@ def lead_time_graph():
     )
 
 
-# fetch data and calculate cycle time of tasks or user stories selected and display graph.
-# This is not average cycle time.
 @app.route("/cycle-time-graph", methods=["GET"])
 def cycle_time_graph_get():
     if "auth_token" not in session:
@@ -244,6 +202,8 @@ def cycle_time_graph_get():
     return render_template("CycleTimeGraph.html", closed_tasks=in_sprint_ids)
 
 
+# fetch data and calculate cycle time of tasks or user stories selected and display graph.
+# This is not average cycle time.
 @app.route("/cycle-time-graph", methods=["POST"])
 def cycle_time_graph():
     if "auth_token" not in session:
@@ -260,7 +220,7 @@ def cycle_time_graph():
             creation_time = os.path.getctime(database_path)
             difference = (current_time - creation_time) / 60
             if difference <= 30:
-                #retrieve data from 
+                #retrieve data from
                 result = []
                 conn = sqlite3.connect(database_path)
                 c = conn.cursor()
@@ -268,7 +228,7 @@ def cycle_time_graph():
                 entries = c.fetchall()
                 result = [{'task_id': entry[0], 'cycle_time': entry[1]} for entry in entries]
                 return jsonify(result)
-    
+
         else:
             #create database
             conn = sqlite3.connect(database_path)
@@ -307,6 +267,7 @@ def cycle_time_graph():
             conn.commit()
             conn.close()
 
+
 @app.route("/partial-work-done-chart", methods=["GET"])
 def partial_work_done_chart():
     # If user is not log`ged in redirect to login page
@@ -334,7 +295,6 @@ def partial_work_done_chart():
         # Handle errors during the API request and print an error message
         print(e)
         return redirect("/error")
-
 
 @app.route("/total-work-done-chart", methods=["GET"])
 def total_work_done_chart():
@@ -500,7 +460,7 @@ def get_work_auc_data():
                         )
                     else:
                         work_auc_delta.append(0)
-                
+
                 work_auc_by_sprint_id[sprint_id] = sum(work_auc_delta) * 100
 
             work_auc_by_sprint_order = []
@@ -675,6 +635,47 @@ def get_business_value_auc_delta():
         return render_template('value-auc-graph.html', bv_auc_delta=list(sprint_bv_auc_delta.items()), auc = auc_list)
 
 
+@app.route("/metric-selection", methods=["GET", "POST"])
+def metric_selection():
+    if "auth_token" not in session:
+        return redirect("/")
+
+    if request.method == "POST":
+        session["metric_selected"] = request.form.get("selectionOption")
+        if session["metric_selected"] == "burndown":
+            return redirect("/burndown-graph")
+
+
+        elif session["metric_selected"] == "cycle_time":
+            return redirect("/cycle-time-graph")
+
+        elif session["metric_selected"] == "lead_time":
+            return redirect("/lead-time-graph")
+
+        elif session["metric_selected"] == "Work_AUC":
+            return redirect("/work-auc")
+
+        elif session["metric_selected"] == "lead_time":
+            return redirect("/lead-time-graph")
+
+        elif session["metric_selected"] == "VIP":
+            return redirect("/VIP")
+
+        elif session['metric_selected'] == 'BD_Consistency':
+            return redirect('/bd-view')
+
+        elif session["metric_selected"] == "Value_AUC":
+            return redirect("/business-value-auc")
+
+        elif session["metric_selected"] == "multiple_bd":
+            return redirect("/multiple-bd")
+
+        elif session["metric_selected"] == "multisprint_bd":
+            return redirect("/multi-sprint-bd")
+
+    return render_template("metric-selection.html")
+
+
 @app.route("/bd-view", methods=["GET"])
 def render_bd_page():
     if "auth_token" not in session:
@@ -769,7 +770,7 @@ def render_multiple_bd_page():
         return redirect('/sprint-selection')
 
     return render_template("multiple-bd.html")
-        
+
 
 @app.route("/multi-sprint-bd", methods=["GET"])
 def render_mult_sprint_bd_page():
@@ -778,15 +779,15 @@ def render_mult_sprint_bd_page():
 
     if 'project_id' not in session:
         return redirect('/slug-input')
-    
+
     project_id = session['project_id']
     auth_token = session['auth_token']
     data_to_plot = {}
     threads = []
-    
+
     for key in session["sprint_mapping"].keys():
         sprintId = session["sprint_mapping"][key]
-        sprint_key = len(session["sprint_mapping"]) - int(key) + 1 
+        sprint_key = len(session["sprint_mapping"]) - int(key) + 1
         data_to_plot[sprint_key] = {}
 
         # partial work done
@@ -808,7 +809,16 @@ def render_mult_sprint_bd_page():
     for thread in threads:
         thread.join()
 
-    
+
     print(json.dumps(data_to_plot, indent=4))
 
     return render_template("multi-sprint-bd.html", data_to_plot=data_to_plot)
+
+@app.route("/arbitrary-lead-time", methods=["GET", "POST"])
+def get_arbitrary_lead_time():
+    # start_date = request.args.get('start_date')
+    # end_date = request.args.get('end_date')
+    lead_times_for_timeframe = get_lead_times_for_arbitrary_timeframe(project_id=session['project_id'], start_time='2024-02-04', end_time='2024-02-21', auth_token=session['auth_token'])
+    return render_template(
+        "arbitrary-lead-time.html", lead_times_for_timeframe=lead_times_for_timeframe
+    )
