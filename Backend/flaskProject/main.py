@@ -280,7 +280,6 @@ def cycle_time_graph():
                 closed_tasks_selected = session["closed_tasks_in_a_sprint"]
             else:
                 closed_tasks_selected = [
-                    task
                     for task in session["closed_tasks_in_a_sprint"]
                     if task["ref"] in closed_tasks_ids
                 ]
@@ -812,3 +811,16 @@ def render_mult_sprint_bd_page():
     print(json.dumps(data_to_plot, indent=4))
 
     return render_template("multi-sprint-bd.html", data_to_plot=data_to_plot)
+
+@app.route("/arbitrary-cycle-time", methods=["GET"])
+def arbitrary_cycle_time():
+    if "auth_token" not in session:
+        return redirect("/")
+    return render_template("arbitrary-cycle-time.html")
+
+@app.route("/arbitrary-cycle-time", methods=["POST"])
+def arbitrary_cycle_time_data():
+    if "auth_token" not in session:
+        return redirect("/")
+    start_date = request.json("start_date")
+    

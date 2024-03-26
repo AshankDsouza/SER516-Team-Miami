@@ -18,3 +18,4 @@ echo "TAIGA_URL=https://api.taiga.io/api/v1" > .env
 #Run the flask app
 flask --app flaskProject/main run
 
+
