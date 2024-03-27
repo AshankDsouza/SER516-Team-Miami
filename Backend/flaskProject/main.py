@@ -53,7 +53,7 @@ app.secret_key = secrets.token_hex(16)
 def loginPage():
     if "auth_token" in session:
         return redirect("/slug-input")
-    
+
     if request.method == "POST":
         micro_login_response = requests.post(
             "http://login_microservice:5000/login",
@@ -64,7 +64,7 @@ def loginPage():
             return redirect("/slug-input")
         else:
             return render_template("login2.html", error=True)
-        
+
     return render_template("login2.html", error=False)
 
 
@@ -674,6 +674,9 @@ def metric_selection():
         elif session["metric_selected"] == "multisprint_bd":
             return redirect("/multi-sprint-bd")
 
+        elif session["metric_selected"] == "arbitrary_lead_time":
+            return redirect("/arbitrary-lead-time")
+
     return render_template("metric-selection.html")
 
 
@@ -817,9 +820,19 @@ def render_mult_sprint_bd_page():
 
 @app.route("/arbitrary-lead-time", methods=["GET", "POST"])
 def get_arbitrary_lead_time():
-    # start_date = request.args.get('start_date')
-    # end_date = request.args.get('end_date')
-    lead_times_for_timeframe = get_lead_times_for_arbitrary_timeframe(project_id=session['project_id'], start_time='2024-02-04', end_time='2024-02-21', auth_token=session['auth_token'])
-    return render_template(
-        "arbitrary-lead-time.html", lead_times_for_timeframe=lead_times_for_timeframe
-    )
+    if "auth_token" not in session:
+        return redirect('/')
+
+    if 'project_id' not in session:
+        return redirect('/slug-input')
+
+    if request.method == 'GET' and request.args.get('start_date'):
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        lead_times_for_timeframe = get_lead_times_for_arbitrary_timeframe(project_id=session['project_id'], start_time=start_date, end_time=end_date, auth_token=session['auth_token'])
+        return render_template(
+            "arbitrary-lead-time.html", lead_times_for_timeframe=lead_times_for_timeframe,
+            is_data_calculated = True)
+
+    elif request.method == 'GET':
+        return render_template("arbitrary-lead-time.html", lead_times_for_timeframe= None, is_data_calculated = False)
