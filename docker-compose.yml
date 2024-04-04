@@ -8,6 +8,7 @@ services:
     environment:
       - TAIGA_URL=https://api.taiga.io/api/v1
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5001
+      - BURNDOWN_BV_BASE_URL=http://burndown_bv_microservice:5001
     volumes:
       - .:/app
     working_dir: /app/Backend
@@ -16,6 +17,13 @@ services:
     
   login_microservice:
     build: ./login_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+  
+  burndown_bv_microservice:
+    build: ./burndown_bv_microservice
     expose:
       - "5000"
     networks:
