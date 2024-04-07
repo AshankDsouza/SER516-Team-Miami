@@ -57,5 +57,3 @@ def loginPage():
         return jsonify({"auth_token": auth_token}), 200
     else:
         "failed to authenticate", 401
-
-

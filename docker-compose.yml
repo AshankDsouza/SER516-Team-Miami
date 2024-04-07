@@ -7,8 +7,11 @@ services:
       - "5000:5000"
     environment:
       - TAIGA_URL=https://api.taiga.io/api/v1
-      - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5001
+
+      - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5000
+      - MICROSERVICE_VIP_BASE_URL=http://microservice_vip:5000
       - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
+
     volumes:
       - .:/app
       # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
@@ -23,12 +26,22 @@ services:
     networks:
       - microservice_network
 
+
+  
+  microservice_vip:
+    build: ./microservice_vip
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+
   total_work_done:
     build: ./totalWorkDone_microservice
     expose:
       - "5000"
     networks:
       - microservice_network
+
 
   leadtime_microservice:
     build: ./leadtime_microservice

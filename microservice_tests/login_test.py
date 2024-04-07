@@ -15,3 +15,5 @@ class test_login(unittest.TestCase):
         mock_post.return_value = mock_reponse
         response = self.app.post('/', data={'username': 'fake_username', 'password': 'fake_password'})
         self.assertEqual(response.status_code, 302)
+
+#run tests in root folder python -m unittest microservice_tests/login_test.py
