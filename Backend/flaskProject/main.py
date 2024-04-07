@@ -341,12 +341,21 @@ def render_burndown_bv():
 
 
 @app.route("/burndown-bv-data", methods=["GET", "POST"])
-def get_burndown_bv_data():
+def burndown_bv_microservice():
     if request.method == "GET":
-        running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(
-            session["project_id"], session["sprint_id"], session["auth_token"]
+        s = requests.Session()
+        microservice_response = s.post(
+            url="http://burndown_bv_microservice:5000/burndown-bv-data",
+            data={
+                "project_id": session["project_id"],
+                "sprint_id": session["sprint_id"],
+                "auth_token": session["auth_token"],
+            },
         )
-        return list((list(running_bv_data.items()), list(ideal_bv_data.items())))
+        if microservice_response.status_code == 200:
+            return microservice_response.json()
+        else:
+            return redirect("/error")
 
 
 @app.route("/work-auc")

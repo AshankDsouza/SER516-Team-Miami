@@ -7,8 +7,8 @@ services:
       - "5000:5000"
     environment:
       - TAIGA_URL=https://api.taiga.io/api/v1
-
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5000
+      - BURNDOWN_BV_BASE_URL=http://burndown_bv_microservice:5000
       - MICROSERVICE_VIP_BASE_URL=http://microservice_vip:5000
       - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
 
@@ -26,8 +26,13 @@ services:
     networks:
       - microservice_network
 
+  burndown_bv_microservice:
+    build: ./burndown_bv_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
 
-  
   microservice_vip:
     build: ./microservice_vip
     expose:
