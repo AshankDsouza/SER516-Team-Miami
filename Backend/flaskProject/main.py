@@ -326,14 +326,12 @@ def total_work_done_chart():
     if (not project_id) or (not sprint_id):
         return "Invalid request!"
 
-    try:
-        data_to_plot = totalWorkDone(project_id, sprint_id, auth_token)
+    res = requests.get(f"http://total_work_done:5000/{project_id}/{sprint_id}/{auth_token}/total-work-done-chart")
 
-        return json.dumps(data_to_plot)
-    except Exception as e:
-        # Handle errors during the API request and print an error message
-        print(e)
-        return redirect("/error")
+    if(res.status_code == 500):
+        return redirect('/error')
+
+    return jsonify(res.json()["data_to_plot"]), res.status_code
 
 
 @app.route("/burndown-bv")

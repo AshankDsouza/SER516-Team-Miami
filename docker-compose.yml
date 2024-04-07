@@ -4,7 +4,7 @@ services:
   flask_app:
     build: .
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - TAIGA_URL=https://api.taiga.io/api/v1
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5001
@@ -17,6 +17,13 @@ services:
     
   login_microservice:
     build: ./login_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+
+  total_work_done:
+    build: ./totalWorkDone_microservice
     expose:
       - "5000"
     networks:
