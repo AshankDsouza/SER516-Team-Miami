@@ -184,7 +184,13 @@ def get_lead_times_for_tasks(project_id, sprint_id, auth_token):
     return taskList
 
 def get_lead_times_for_arbitrary_timeframe(project_id, start_time, end_time, auth_token):
-    tasks = get_all_tasks(project_id, auth_token)
+    all_tasks = get_tasks(project_id, auth_token)
+    tasks = [{
+        "id" : task['ref'],
+        "created_date": task['created_date'],
+        "finished_date": task['finished_date'],
+    } for task in all_tasks if task.get("is_closed")
+        ]
     date_list = pandas.date_range(start_time, end_time)
     result = (lambda : { datetime.fromisoformat(str(date).split(' ')[0]).strftime('%b %d') : [] for date in date_list })()
     start_time = datetime.fromisoformat(start_time)
