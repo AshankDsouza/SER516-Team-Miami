@@ -2,6 +2,9 @@
 */.DS_Store
 *.DS_Store
 
+# Ignore db files
+*.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

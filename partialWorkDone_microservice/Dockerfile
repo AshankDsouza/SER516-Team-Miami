@@ -9,10 +9,10 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 COPY . /app
 
-EXPOSE 5000
+EXPOSE 8080
 
 ENV TAIGA_URL=https://api.taiga.io/api/v1
 
 WORKDIR /app/Backend
 
-CMD ["flask", "--app", "flaskProject/main", "run", "--host=0.0.0.0"]
+CMD ["flask", "--app", "flaskProject/main", "run", "--debug", "--host=0.0.0.0"]

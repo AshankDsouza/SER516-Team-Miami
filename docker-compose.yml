@@ -10,6 +10,7 @@ services:
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5001
     volumes:
       - .:/app
+      # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
     working_dir: /app/Backend
     networks:
       - microservice_network
@@ -20,6 +21,17 @@ services:
       - "5000"
     networks:
       - microservice_network
+    
+  partial_work_done:
+    build: ./partialWorkDone_microservice
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    networks:
+      - microservice_network
+    volumes:
+      # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\partialWorkDone_microservice\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
   
 networks:
   microservice_network:
