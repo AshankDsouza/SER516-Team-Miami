@@ -59,6 +59,7 @@ def loginPage():
             "http://login_microservice:5000/login",
             data = request.form
         )
+
         if micro_login_response.status_code == 200:
             session["auth_token"] = micro_login_response.json()["auth_token"]
             return redirect("/slug-input")
@@ -296,15 +297,13 @@ def partial_work_done_chart():
     # Throwing error if the user has submitted project_id or sprint_id
     if (not project_id) or (not sprint_id):
         return "Invalid request!"
+    
+    res = requests.get(f"http://partial_work_done:5000/{project_id}/{sprint_id}/{auth_token}/partial-work-done-chart")
 
-    try:
-        data_to_plot = partialWorkDone(project_id, sprint_id, auth_token)
+    if(res.status_code == 500):
+        return redirect('/error')
 
-        return json.dumps(data_to_plot)
-    except Exception as e:
-        # Handle errors during the API request and print an error message
-        print(e)
-        return redirect("/error")
+    return jsonify(res.json()["data_to_plot"]), res.status_code
 
 @app.route("/total-work-done-chart", methods=["GET"])
 def total_work_done_chart():
@@ -326,14 +325,12 @@ def total_work_done_chart():
     if (not project_id) or (not sprint_id):
         return "Invalid request!"
 
-    try:
-        data_to_plot = totalWorkDone(project_id, sprint_id, auth_token)
+    res = requests.get(f"http://total_work_done:5000/{project_id}/{sprint_id}/{auth_token}/total-work-done-chart")
 
-        return json.dumps(data_to_plot)
-    except Exception as e:
-        # Handle errors during the API request and print an error message
-        print(e)
-        return redirect("/error")
+    if(res.status_code == 500):
+        return redirect('/error')
+
+    return jsonify(res.json()["data_to_plot"]), res.status_code
 
 
 @app.route("/burndown-bv")
