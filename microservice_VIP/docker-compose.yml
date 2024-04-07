@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  VIP_microservice:
+  microservice_VIP:
     build: .
     ports:
       - "5001:5000"
