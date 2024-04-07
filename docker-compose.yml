@@ -8,6 +8,7 @@ services:
     environment:
       - TAIGA_URL=https://api.taiga.io/api/v1
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5001
+      - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
     volumes:
       - .:/app
     working_dir: /app/Backend
@@ -20,7 +21,14 @@ services:
       - "5000"
     networks:
       - microservice_network
-  
+
+  leadtime_microservice:
+    build: ./leadtime_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+
 networks:
   microservice_network:
     driver: bridge
