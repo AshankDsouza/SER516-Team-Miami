@@ -624,7 +624,7 @@ def render_bd_page():
     if(res.status_code == 500):
         return redirect('/error')
 
-    return res.text, 200
+    return res.text, res.status_code
 
 
 @app.route("/bd-calculation", methods=["GET"])
