@@ -1,0 +1,6 @@
+version: '3.8'
+services:
+  microservice_vip:
+    build: .
+    ports:
+      - "5001:5000"
