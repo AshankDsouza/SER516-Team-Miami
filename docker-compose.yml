@@ -25,9 +25,7 @@ services:
   partial_work_done:
     build: ./partialWorkDone_microservice
     expose:
-      - "8080"
-    ports:
-      - "8080:8080"
+      - "5000"
     networks:
       - microservice_network
     volumes:
