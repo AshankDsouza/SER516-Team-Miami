@@ -697,7 +697,13 @@ def render_bd_page():
     if 'sprint_id' not in session:
         return redirect('/sprint-selection')
 
-    return render_template("BD-Consistency-graph.html")
+    res = requests.get(f"http://bd_consistency:5000/render-bd-view")
+
+    if(res.status_code == 500):
+        return redirect('/error')
+
+    return res.text, res.status_code
+
 
 
 @app.route("/bd-calculation", methods=["GET"])
