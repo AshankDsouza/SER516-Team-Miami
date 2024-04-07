@@ -23,6 +23,13 @@ services:
     networks:
       - microservice_network
 
+  total_work_done:
+    build: ./totalWorkDone_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+
   leadtime_microservice:
     build: ./leadtime_microservice
     expose:

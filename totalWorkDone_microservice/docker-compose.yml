@@ -1,0 +1,5 @@
+version: '3.8'
+
+services:
+  total_work_done:
+    build: .
