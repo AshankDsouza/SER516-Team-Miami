@@ -9,7 +9,7 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 COPY . /app
 
-EXPOSE 8080
+EXPOSE 5000
 
 ENV TAIGA_URL=https://api.taiga.io/api/v1
 
