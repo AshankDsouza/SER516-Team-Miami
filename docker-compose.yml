@@ -9,6 +9,7 @@ services:
       - TAIGA_URL=https://api.taiga.io/api/v1
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5001
       - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
+      - ARBITRARYLEADTIME_MICROSERVICE_BASE_URL=http://arbitraryleadtime_microservice:5000
     volumes:
       - .:/app
     working_dir: /app/Backend
@@ -24,6 +25,13 @@ services:
 
   leadtime_microservice:
     build: ./leadtime_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+
+  arbitraryleadtime_microservice:
+    build: ./arbitraryleadtime_microservice
     expose:
       - "5000"
     networks:
