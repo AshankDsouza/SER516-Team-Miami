@@ -1,0 +1,33 @@
+name: Run Unit Tests for Microservices
+
+on:
+  push:
+    branches:
+      - main
+      - Sprint-4
+  pull_request:
+    branches:
+      - main
+      - Sprint-4
+
+jobs:
+  tests:
+  
+    name: run unit tests for microservices
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' 
+        
+    - name: Install dependencies
+      run: | 
+        python3 -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: run tests
+      run: python -m unittest discover -s microservice_tests
+    
