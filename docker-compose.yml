@@ -11,6 +11,7 @@ services:
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5000
       - MICROSERVICE_VIP_BASE_URL=http://microservice_vip:5000
       - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
+      - WORK_AUC_MICROSERVICE_BASE_URL=http://work_auc_microservice:5000
 
     volumes:
       - .:/app
@@ -52,6 +53,13 @@ services:
 
   partial_work_done:
     build: ./partialWorkDone_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+  
+  work_auc_microservice:
+    build: ./work_auc_microservice
     expose:
       - "5000"
     networks:
