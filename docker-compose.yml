@@ -11,6 +11,7 @@ services:
       - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
     volumes:
       - .:/app
+      # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
     working_dir: /app/Backend
     networks:
       - microservice_network
@@ -29,6 +30,13 @@ services:
     networks:
       - microservice_network
 
+  partial_work_done:
+    build: ./partialWorkDone_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+      
 networks:
   microservice_network:
     driver: bridge
