@@ -7,7 +7,8 @@ services:
       - "5000:5000"
     environment:
       - TAIGA_URL=https://api.taiga.io/api/v1
-      - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5001
+      - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5000
+      - MICROSERVICE_VIP_BASE_URL=http://microservice_vip:5000
     volumes:
       - .:/app
     working_dir: /app/Backend
@@ -16,6 +17,13 @@ services:
     
   login_microservice:
     build: ./login_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+  
+  microservice_vip:
+    build: ./microservice_vip
     expose:
       - "5000"
     networks:

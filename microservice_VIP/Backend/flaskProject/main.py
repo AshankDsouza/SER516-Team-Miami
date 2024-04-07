@@ -50,11 +50,11 @@ app = Flask(__name__)
 
 @app.route("/VIPC", methods=["POST"])
 def calculate_VIP():
-    if "auth_token" not in session:
-        return redirect("/")
+    data = request.get_json()
+    main_session = data["session"]
     # get all the user stories from the sprint
     user_stories = get_userstories_for_milestones(
-        [session["sprint_id"]], session["auth_token"]
+        [main_session["sprint_id"]], main_session["auth_token"]
     )[
         0
     ]  # it has complete infromation
@@ -63,10 +63,10 @@ def calculate_VIP():
     get_userstory_ids = lambda: [userstory["id"] for userstory in user_stories]
     userstory_ids = get_userstory_ids()
     business_value_id = get_business_value_id(
-        session["project_id"], session["auth_token"]
+        main_session["project_id"], main_session["auth_token"]
     )
     custom_attribute_values = get_custom_attribute_values(
-        userstory_ids, session["auth_token"]
+        userstory_ids, main_session["auth_token"]
     )
     ###
     user_story_business_value_map = get_user_story_business_value_map(
@@ -92,14 +92,14 @@ def calculate_VIP():
     # get story start dates
     ###
     story_start_date_map = get_user_story_start_date(
-        user_stories, session["auth_token"]
+        user_stories, main_session["auth_token"]
     )
     ###
 
     # get starting date of a sprint
     # get ending date of a sprint "finish_date"
     sprint_data = get_milestones_by_sprint(
-        session["project_id"], session["sprint_id"], session["auth_token"]
+        main_session["project_id"], main_session["sprint_id"], main_session["auth_token"]
     )
     sprint_start_date = sprint_data["estimated_start"]
     sprint_start_date = datetime.fromisoformat(sprint_start_date)
@@ -142,7 +142,7 @@ def calculate_VIP():
         one_day_points = 0
         one_day_BV = 0
 
-    return jsonify(data_points)
+    return data_points
 
 
 
