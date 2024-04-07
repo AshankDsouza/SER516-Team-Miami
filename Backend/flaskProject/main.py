@@ -182,7 +182,16 @@ def lead_time_graph():
     auth_token = session["auth_token"]
     project_id = session["project_id"]
     sprint_id = session["sprint_id"]
-    lead_times_for_sprint = get_lead_times_for_tasks(project_id, sprint_id, auth_token)
+    form_data = {
+        "auth_token" : auth_token,
+        "project_id" : project_id,
+        "sprint_id" : sprint_id
+    }
+    leadtime_response = requests.get(
+        "http://leadtime_microservice:5000/lead-time-graph",
+        data=form_data
+    )
+    lead_times_for_sprint = leadtime_response.json()["lead_times_for_sprint"]
     return render_template(
         "lead-time-sprint-graph.html", lead_times_for_sprint=lead_times_for_sprint
     )
