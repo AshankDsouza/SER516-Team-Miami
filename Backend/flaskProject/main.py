@@ -827,7 +827,7 @@ def render_mult_sprint_bd_page():
 
     return render_template("multi-sprint-bd.html", data_to_plot=data_to_plot)
 
-@app.route("/arbitrary-lead-time", methods=["GET", "POST"])
+@app.route("/arbitrary-lead-time", methods=["GET"])
 def get_arbitrary_lead_time():
     if "auth_token" not in session:
         return redirect('/')
@@ -838,7 +838,17 @@ def get_arbitrary_lead_time():
     if request.method == 'GET' and request.args.get('start_date'):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
-        lead_times_for_timeframe = get_lead_times_for_arbitrary_timeframe(project_id=session['project_id'], start_time=start_date, end_time=end_date, auth_token=session['auth_token'])
+        form_data = {
+            "auth_token": session["auth_token"],
+            "project_id": session["project_id"],
+            "start_date": start_date,
+            "end_date": end_date
+        }
+        arbitraryleadtime_response = requests.get(
+            "http://arbitraryleadtime_microservice:5000/arbitrary-lead-time-data",
+            data=form_data
+        )
+        lead_times_for_timeframe = arbitraryleadtime_response.json()["lead_times_for_timeframe"]
         return render_template(
             "arbitrary-lead-time.html", lead_times_for_timeframe=lead_times_for_timeframe,
             is_data_calculated = True)
