@@ -220,65 +220,14 @@ def cycle_time_graph():
     if "auth_token" not in session:
         return redirect("/")
     if request.method == "POST":
-        # The data should be sent by fetch and POST method in JSON format
-
-        #Check if the database exists and if the database still valid
-        database_name = 'sprint_{}_project_{}.db'.format(session["sprint_id"], session["project_id"])
-        database_path = os.path.join(app.root_path, database_name)
-
-        if os.path.exists(database_path):
-            current_time = time.time()
-            creation_time = os.path.getctime(database_path)
-            difference = (current_time - creation_time) / 60
-            if difference <= 30:
-                #retrieve data from
-                result = []
-                conn = sqlite3.connect(database_path)
-                c = conn.cursor()
-                c.execute('SELECT * FROM cycle_times')
-                entries = c.fetchall()
-                result = [{'task_id': entry[0], 'cycle_time': entry[1]} for entry in entries]
-                return jsonify(result)
-
+        closed_tasks_ids = request.json["closed_tasks_ids"]
+        response = requests.post('http://microservice_cycle_time:5000/cycle_time_calculation', json = {'session': dict(session), 'closed_tasks_ids': closed_tasks_ids})
+        if response.content:
+            result = response.json()
         else:
-            #create database
-            conn = sqlite3.connect(database_path)
-            c = conn.cursor()
-            closed_tasks_ids = request.json["closed_tasks_ids"]
-
-            closed_tasks_selected = []
-            if closed_tasks_ids == [0]:
-                closed_tasks_selected = session["closed_tasks_in_a_sprint"]
-            else:
-                closed_tasks_selected = [
-                    task
-                    for task in session["closed_tasks_in_a_sprint"]
-                    if task["ref"] in closed_tasks_ids
-                ]
-
-            # fetch data from taiga api
-            if closed_tasks_selected != None:
-
-                result = calculate_cycle_times_for_tasks(
-                    closed_tasks_selected, session["auth_token"]
-                )
-                c.execute('''
-                    CREATE TABLE IF NOT EXISTS cycle_times (
-                        id TEXT PRIMARY KEY,
-                        cycle_time REAL NOT NULL
-                        )
-                    ''')
-                for entry in result:
-                    c.execute('INSERT INTO cycle_times (id, cycle_time) VALUES (?, ?)', (entry['task_id'], entry['cycle_time']))
-                conn.commit()
-                conn.close()
-                return jsonify(
-                    result
-                )
-            conn.commit()
-            conn.close()
-
-
+            result = {}
+        return jsonify(result)
+        
 @app.route("/partial-work-done-chart", methods=["GET"])
 def partial_work_done_chart():
     # If user is not log`ged in redirect to login page
