@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from Backend.flaskProject.main import app
 
-class BdConsistency(unittest.TestCase):
+class PartialWorkDoneTest(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
@@ -15,5 +15,5 @@ class BdConsistency(unittest.TestCase):
         fake_response.status_code = 200
         fake_response.json.return_value = {'data_to_plot': 'fake_data_to_plot'}
         fake_post.return_value = fake_response
-        response = self.app.get('/bd-calculation')
+        response = self.app.get('/multi-sprint-bd')
         self.assertEqual(response.status_code, 200)
