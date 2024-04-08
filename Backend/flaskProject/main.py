@@ -55,11 +55,13 @@ def loginPage():
         return redirect("/slug-input")
 
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        auth_token = authenticate(username, password)
-        if auth_token:
-            session["auth_token"] = auth_token
+        micro_login_response = requests.post(
+            "http://login_microservice:5000/login",
+            data = request.form
+        )
+
+        if micro_login_response.status_code == 200:
+            session["auth_token"] = micro_login_response.json()["auth_token"]
             return redirect("/slug-input")
         else:
             return render_template("login2.html", error=True)
@@ -140,7 +142,6 @@ def burndown_graph():
     return render_template("burndown-graph.html")
 
 
-
 @app.route("/<user_story>/get-business-value", methods=["GET"])
 def get_business_value_by_user_story(user_story):
     if "auth_token" not in session:
@@ -181,7 +182,16 @@ def lead_time_graph():
     auth_token = session["auth_token"]
     project_id = session["project_id"]
     sprint_id = session["sprint_id"]
-    lead_times_for_sprint = get_lead_times_for_tasks(project_id, sprint_id, auth_token)
+    form_data = {
+        "auth_token" : auth_token,
+        "project_id" : project_id,
+        "sprint_id" : sprint_id
+    }
+    leadtime_response = requests.get(
+        "http://leadtime_microservice:5000/lead-time-graph",
+        data=form_data
+    )
+    lead_times_for_sprint = leadtime_response.json()["lead_times_for_sprint"]
     return render_template(
         "lead-time-sprint-graph.html", lead_times_for_sprint=lead_times_for_sprint
     )
@@ -209,65 +219,14 @@ def cycle_time_graph():
     if "auth_token" not in session:
         return redirect("/")
     if request.method == "POST":
-        # The data should be sent by fetch and POST method in JSON format
-
-        #Check if the database exists and if the database still valid
-        database_name = 'sprint_{}_project_{}.db'.format(session["sprint_id"], session["project_id"])
-        database_path = os.path.join(app.root_path, database_name)
-
-        if os.path.exists(database_path):
-            current_time = time.time()
-            creation_time = os.path.getctime(database_path)
-            difference = (current_time - creation_time) / 60
-            if difference <= 30:
-                #retrieve data from
-                result = []
-                conn = sqlite3.connect(database_path)
-                c = conn.cursor()
-                c.execute('SELECT * FROM cycle_times')
-                entries = c.fetchall()
-                result = [{'task_id': entry[0], 'cycle_time': entry[1]} for entry in entries]
-                return jsonify(result)
-
+        closed_tasks_ids = request.json["closed_tasks_ids"]
+        response = requests.post('http://microservice_cycle_time:5000/cycle_time_calculation', json = {'session': dict(session), 'closed_tasks_ids': closed_tasks_ids})
+        if response.content:
+            result = response.json()
         else:
-            #create database
-            conn = sqlite3.connect(database_path)
-            c = conn.cursor()
-            closed_tasks_ids = request.json["closed_tasks_ids"]
-
-            closed_tasks_selected = []
-            if closed_tasks_ids == [0]:
-                closed_tasks_selected = session["closed_tasks_in_a_sprint"]
-            else:
-                closed_tasks_selected = [
-                    task
-                    for task in session["closed_tasks_in_a_sprint"]
-                    if task["ref"] in closed_tasks_ids
-                ]
-
-            # fetch data from taiga api
-            if closed_tasks_selected != None:
-
-                result = calculate_cycle_times_for_tasks(
-                    closed_tasks_selected, session["auth_token"]
-                )
-                c.execute('''
-                    CREATE TABLE IF NOT EXISTS cycle_times (
-                        id TEXT PRIMARY KEY,
-                        cycle_time REAL NOT NULL
-                        )
-                    ''')
-                for entry in result:
-                    c.execute('INSERT INTO cycle_times (id, cycle_time) VALUES (?, ?)', (entry['task_id'], entry['cycle_time']))
-                conn.commit()
-                conn.close()
-                return jsonify(
-                    result
-                )
-            conn.commit()
-            conn.close()
-
-
+            result = {}
+        return jsonify(result)
+        
 @app.route("/partial-work-done-chart", methods=["GET"])
 def partial_work_done_chart():
     # If user is not log`ged in redirect to login page
@@ -286,15 +245,13 @@ def partial_work_done_chart():
     # Throwing error if the user has submitted project_id or sprint_id
     if (not project_id) or (not sprint_id):
         return "Invalid request!"
+    
+    res = requests.get(f"http://partial_work_done:5000/{project_id}/{sprint_id}/{auth_token}/partial-work-done-chart")
 
-    try:
-        data_to_plot = partialWorkDone(project_id, sprint_id, auth_token)
+    if(res.status_code == 500):
+        return redirect('/error')
 
-        return json.dumps(data_to_plot)
-    except Exception as e:
-        # Handle errors during the API request and print an error message
-        print(e)
-        return redirect("/error")
+    return jsonify(res.json()["data_to_plot"]), res.status_code
 
 @app.route("/total-work-done-chart", methods=["GET"])
 def total_work_done_chart():
@@ -316,14 +273,12 @@ def total_work_done_chart():
     if (not project_id) or (not sprint_id):
         return "Invalid request!"
 
-    try:
-        data_to_plot = totalWorkDone(project_id, sprint_id, auth_token)
+    res = requests.get(f"http://total_work_done:5000/{project_id}/{sprint_id}/{auth_token}/total-work-done-chart")
 
-        return json.dumps(data_to_plot)
-    except Exception as e:
-        # Handle errors during the API request and print an error message
-        print(e)
-        return redirect("/error")
+    if(res.status_code == 500):
+        return redirect('/error')
+
+    return jsonify(res.json()["data_to_plot"]), res.status_code
 
 
 @app.route("/burndown-bv")
@@ -333,13 +288,22 @@ def render_burndown_bv():
     return render_template("burndown-bv.html")
 
 
-@app.route("/burndown-bv-data", methods=["GET", "POST"])
-def get_burndown_bv_data():
-    if request.method == "GET":
-        running_bv_data, ideal_bv_data = get_business_value_data_for_sprint(
-            session["project_id"], session["sprint_id"], session["auth_token"]
+@app.route("/burndown-bv-data", methods=["GET"])
+def burndown_bv_microservice():
+    try:
+        microservice_response = requests.get(
+            "http://burndown_bv_microservice:5000/burndown-bv-data",
+            data={
+                "project_id": session["project_id"],
+                "sprint_id": session["sprint_id"],
+                "auth_token": session["auth_token"],
+            },
         )
-        return list((list(running_bv_data.items()), list(ideal_bv_data.items())))
+        return microservice_response.json()
+
+    except Exception as e:
+        print(e)
+        return redirect("/error")
 
 
 @app.route("/work-auc")
@@ -349,139 +313,24 @@ def render_work_auc():
     return render_template("work-auc.html")
 
 
-@app.route("/work-auc-data", methods=["GET", "POST"])
-def get_work_auc_data():
-    if request.method == "GET":
-        try:
-            sprintMapping, sprints = get_number_of_milestones(
-                session["project_id"], session["auth_token"]
-            )
+@app.route("/work-auc-data", methods=["GET"])
+def work_auc_microservice():
+    if "auth_token" not in session:
+        return redirect("/")
+    # if request.method == "GET":
+    try:
+        microservice_response = requests.get(
+            "http://work_auc_microservice:5000/work-auc-data",
+            data={
+                "project_id": session["project_id"],
+                "auth_token": session["auth_token"],
+            },
+        )
+        return microservice_response.json()
 
-            work_auc_by_sprint_id = {}
-            for sprint_id in list(sprintMapping.values()):
-                milestone = get_milestones_by_sprint(
-                    session["project_id"], sprint_id, session["auth_token"]
-                )
-
-                data_to_plot = {
-                    "total_story_points": 0,
-                    "x_axis": [],
-                    "y_axis": [],
-                    "ideal_projection": [],
-                    "actual_projection": [],
-                    "sprint_start_date": milestone["estimated_start"],
-                    "sprint_end_date": milestone["estimated_finish"],
-                }
-
-                for user_story in milestone["user_stories"]:
-                    if user_story["total_points"] == None:
-                        continue
-                    data_to_plot["total_story_points"] += int(
-                        user_story["total_points"]
-                    )
-
-                start_date = datetime.strptime(
-                    data_to_plot["sprint_start_date"], "%Y-%m-%d"
-                )
-                end_date = datetime.strptime(
-                    data_to_plot["sprint_end_date"], "%Y-%m-%d"
-                )
-
-                data_to_plot["x_axis"] = [
-                    (start_date + timedelta(days=day)).strftime("%d %b %Y")
-                    for day in range((end_date - start_date).days + 1)
-                ]
-                data_to_plot["y_axis"] = [
-                    i for i in range(0, data_to_plot["total_story_points"] + 20, 20)
-                ]
-
-                ideal_graph_points = data_to_plot["total_story_points"]
-                avg_comp_story_point = data_to_plot["total_story_points"] / (
-                    len(data_to_plot["x_axis"]) - 1
-                )
-                while ideal_graph_points > 0:
-                    temp = round(ideal_graph_points - avg_comp_story_point, 1)
-                    if len(data_to_plot["ideal_projection"]) <= 0:
-                        data_to_plot["ideal_projection"].append(
-                            data_to_plot["total_story_points"]
-                        )
-                    if temp > 0:
-                        data_to_plot["ideal_projection"].append(temp)
-                    else:
-                        data_to_plot["ideal_projection"].append(0)
-                    ideal_graph_points = temp
-                for index in range(0, len(data_to_plot["x_axis"])):
-                    current_processing_date = data_to_plot["x_axis"][index]
-                    current_processing_date_points = 0
-                    if index <= 0:
-                        current_processing_date_points = data_to_plot[
-                            "total_story_points"
-                        ]
-                    else:
-                        current_processing_date_points = data_to_plot[
-                            "actual_projection"
-                        ][index - 1]
-                    total_points_completed = 0
-                    for user_story in milestone["user_stories"]:
-                        if (
-                            user_story["finish_date"] == None
-                            or user_story["total_points"] == None
-                        ):
-                            continue
-                        finish_date = datetime.fromisoformat(
-                            user_story["finish_date"]
-                        ).strftime("%d %b %Y")
-
-                        if finish_date != current_processing_date:
-                            continue
-                        total_points_completed = (
-                            user_story["total_points"] + total_points_completed
-                        )
-                    data_to_plot["actual_projection"].append(
-                        round(
-                            current_processing_date_points - total_points_completed, 1
-                        )
-                    )
-
-                actual_value = data_to_plot["actual_projection"]
-                ideal_value = data_to_plot["ideal_projection"]
-                total_points = data_to_plot["total_story_points"]
-                work_auc_delta = []
-                for idx in range(len(actual_value)):
-                    if total_points != 0:
-                        work_auc_delta.append(
-                            round(
-                                abs(
-                                    (total_points - actual_value[idx]) / total_points
-                                    - (total_points - ideal_value[idx]) / total_points
-                                ),
-                                2,
-                            )
-                        )
-                    else:
-                        work_auc_delta.append(0)
-
-                work_auc_by_sprint_id[sprint_id] = sum(work_auc_delta) * 100
-
-            work_auc_by_sprint_order = []
-            for sprint_id in list(sprintMapping.values()):
-                work_auc_by_sprint_order.insert(0, work_auc_by_sprint_id[sprint_id])
-
-            sprint_label = []
-            for i in range(sprints):
-                sprint_label.append("Sprint " + str(i + 1))
-
-            return jsonify(
-                {
-                    "x_axis": sprint_label,
-                    "work_auc_by_sprint_order": work_auc_by_sprint_order,
-                }
-            )
-
-        except Exception as e:
-            # Handle errors during the API request and print an error message
-            print(e)
-            return redirect("/error")
+    except Exception as e:
+        print(e)
+        return redirect("/error")
 
 
 @app.route("/error", methods=["GET"])
@@ -501,95 +350,8 @@ def calculate_VIP():
     if "auth_token" not in session:
         return redirect("/")
     # get all the user stories from the sprint
-    user_stories = get_userstories_for_milestones(
-        [session["sprint_id"]], session["auth_token"]
-    )[
-        0
-    ]  # it has complete infromation
-
-    # get business value of each user story, and calculate total business value
-    get_userstory_ids = lambda: [userstory["id"] for userstory in user_stories]
-    userstory_ids = get_userstory_ids()
-    business_value_id = get_business_value_id(
-        session["project_id"], session["auth_token"]
-    )
-    custom_attribute_values = get_custom_attribute_values(
-        userstory_ids, session["auth_token"]
-    )
-    ###
-    user_story_business_value_map = get_user_story_business_value_map(
-        business_value_id, custom_attribute_values
-    )
-    total_business_value = sum(user_story_business_value_map.values())
-    ###
-
-    # get total user stories points
-
-    ####
-    total_points = 0
-    story_points_map = {}
-    story_finish_date_map = {}
-    ####
-
-    for story in user_stories:
-        if story["total_points"] != None:
-            total_points += story["total_points"]
-            story_points_map[story["id"]] = story["total_points"]
-            story_finish_date_map[story["id"]] = story["finish_date"]
-
-    # get story start dates
-    ###
-    story_start_date_map = get_user_story_start_date(
-        user_stories, session["auth_token"]
-    )
-    ###
-
-    # get starting date of a sprint
-    # get ending date of a sprint "finish_date"
-    sprint_data = get_milestones_by_sprint(
-        session["project_id"], session["sprint_id"], session["auth_token"]
-    )
-    sprint_start_date = sprint_data["estimated_start"]
-    sprint_start_date = datetime.fromisoformat(sprint_start_date)
-    sprint_finish_date = sprint_data["estimated_finish"]
-    sprint_finish_date = datetime.fromisoformat(sprint_finish_date)
-    # check which user stories is in progress at a given date
-    date_list = [
-        (sprint_start_date + timedelta(days=day))
-        for day in range((sprint_finish_date - sprint_start_date).days + 1)
-    ]
-    data_points = []
-    one_day_points = 0
-    one_day_BV = 0
-    for date in date_list:
-        date = date.replace(tzinfo=None)
-        for user_story in user_stories:
-            if story_start_date_map[user_story["id"]] == None:
-                continue
-            start_date = story_start_date_map[user_story["id"]].replace(tzinfo=None)
-            if story_finish_date_map[user_story["id"]] != None:
-                finish_date = datetime.fromisoformat(
-                    story_finish_date_map[user_story["id"]]
-                ).replace(tzinfo=None)
-            else:
-                finish_date = None
-
-
-            if start_date.date() <= date.date() and (finish_date == None or finish_date.date() > date.date()):
-
-                one_day_points += story_points_map[user_story["id"]]
-                one_day_BV += user_story_business_value_map[user_story["id"]]
-
-        data_points.append(
-            {
-                "date": date.strftime("%d %b %Y"),
-                "user_story_points": one_day_points / total_points,
-                "BV": one_day_BV / total_business_value,
-            }
-        )
-        one_day_points = 0
-        one_day_BV = 0
-
+    response = requests.post('http://microservice_vip:5000/VIPC', json = {'session': dict(session)})
+    data_points = response.json()
     return jsonify(data_points)
 
 
@@ -673,6 +435,9 @@ def metric_selection():
         elif session["metric_selected"] == "multisprint_bd":
             return redirect("/multi-sprint-bd")
 
+        elif session["metric_selected"] == "arbitrary_lead_time":
+            return redirect("/arbitrary-lead-time")
+
     return render_template("metric-selection.html")
 
 
@@ -686,8 +451,13 @@ def render_bd_page():
 
     if 'sprint_id' not in session:
         return redirect('/sprint-selection')
+    
+    res = requests.get("http://bd_consistency:5000/render-bd-view")
 
-    return render_template("BD-Consistency-graph.html")
+    if(res.status_code == 500):
+        return redirect('/error')
+
+    return res.text, res.status_code
 
 
 @app.route("/bd-calculation", methods=["GET"])
@@ -704,59 +474,19 @@ def bd_calculations():
     if((not project_id) or (not sprint_id)):
         return 'Invalid request!'
     
-    # Data required to plot is stored here
-    data_to_plot = { 
-            "total_story_points": 0,
-            "x_axis": [],
-            "bv_projection": [],
-            "story_points_projection": []
-    }
+    auth_token = session["auth_token"]
+    
+    res = requests.get(f"http://bd_consistency:5000/{project_id}/{sprint_id}/{auth_token}/bd-calculation")
 
-    milestone = get_milestones_by_sprint(project_id, sprint_id, session["auth_token"])
+    if(res.status_code == 500):
+        return redirect('/error')
 
-    for user_story in milestone["user_stories"]:
-        if user_story["total_points"] == None: 
-            continue
-
-        data_to_plot["total_story_points"] += int(user_story["total_points"])
-            
-    start_date  = datetime.strptime(milestone["estimated_start"], '%Y-%m-%d')
-    end_date = datetime.strptime(milestone["estimated_finish"], '%Y-%m-%d')
-
-    data_to_plot["x_axis"] = [(start_date + timedelta(days=day)).strftime("%d %b %Y") for day in range((end_date - start_date).days + 1)]
-
-    for index in range(0, len(data_to_plot["x_axis"])):
-        current_processing_date = data_to_plot["x_axis"][index]
-        current_processing_date_points = 0
-
-        if index <= 0:
-            current_processing_date_points = data_to_plot["total_story_points"]
-        else:
-            current_processing_date_points = data_to_plot["story_points_projection"][index - 1]
-
-        total_points_completed = 0
-        for user_story in milestone["user_stories"]:
-            if(user_story["finish_date"] == None or user_story["total_points"] == None):
-                continue
-
-            finish_date = datetime.fromisoformat(user_story["finish_date"]).strftime("%d %b %Y")
-                    
-            if(finish_date != current_processing_date):
-                continue
-
-            total_points_completed = user_story["total_points"] + total_points_completed
-
-        data_to_plot["story_points_projection"].append(round(current_processing_date_points - total_points_completed, 1))
-
-    running_bv_data, _ = get_business_value_data_for_sprint(session['project_id'], session['sprint_id'], session['auth_token'])
-    data_to_plot['bv_projection'] = running_bv_data
-
-    return json.dumps(data_to_plot)
+    return jsonify(res.json()["data_to_plot"]), res.status_code
 
         
     #data needs for calculation
     #running_bv_data, ideal_bv_data, data_to_plot["actual_projection"], data_to_plot["totla_story_points"]
-        
+
 
 @app.route("/multiple-bd", methods=["GET"])
 def render_multiple_bd_page():
@@ -816,9 +546,19 @@ def render_mult_sprint_bd_page():
 
 @app.route("/arbitrary-lead-time", methods=["GET", "POST"])
 def get_arbitrary_lead_time():
-    # start_date = request.args.get('start_date')
-    # end_date = request.args.get('end_date')
-    lead_times_for_timeframe = get_lead_times_for_arbitrary_timeframe(project_id=session['project_id'], start_time='2024-02-04', end_time='2024-02-21', auth_token=session['auth_token'])
-    return render_template(
-        "arbitrary-lead-time.html", lead_times_for_timeframe=lead_times_for_timeframe
-    )
+    if "auth_token" not in session:
+        return redirect('/')
+
+    if 'project_id' not in session:
+        return redirect('/slug-input')
+
+    if request.method == 'GET' and request.args.get('start_date'):
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        lead_times_for_timeframe = get_lead_times_for_arbitrary_timeframe(project_id=session['project_id'], start_time=start_date, end_time=end_date, auth_token=session['auth_token'])
+        return render_template(
+            "arbitrary-lead-time.html", lead_times_for_timeframe=lead_times_for_timeframe,
+            is_data_calculated = True)
+
+    elif request.method == 'GET':
+        return render_template("arbitrary-lead-time.html", lead_times_for_timeframe= None, is_data_calculated = False)
