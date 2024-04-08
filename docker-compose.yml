@@ -11,6 +11,7 @@ services:
       - BURNDOWN_BV_BASE_URL=http://burndown_bv_microservice:5000
       - MICROSERVICE_VIP_BASE_URL=http://microservice_vip:5000
       - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
+      - WORK_AUC_MICROSERVICE_BASE_URL=http://work_auc_microservice:5000
 
     volumes:
       - .:/app
@@ -62,6 +63,13 @@ services:
       - "5000"
     networks:
       - microservice_network
+  
+  work_auc_microservice:
+    build: ./work_auc_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
 
   bd_consistency:
     build: ./bdConsistency_microservice
@@ -69,6 +77,7 @@ services:
       - "5000"
     networks:
       - microservice_network
+
     # volumes:
       # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\bdConsistency_microservice\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
       # - "/Users/keer/Desktop/SER516-Team-Miami/bdConsistency_microservice/Backend/flaskProject/:/app/Backend/flaskProject/"
