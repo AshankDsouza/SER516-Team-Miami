@@ -506,43 +506,14 @@ def render_multiple_bd_page():
 def render_mult_sprint_bd_page():
     if "auth_token" not in session:
         return redirect('/')
-
     if 'project_id' not in session:
         return redirect('/slug-input')
-
-    project_id = session['project_id']
-    auth_token = session['auth_token']
-    data_to_plot = {}
-    threads = []
-
-    for key in session["sprint_mapping"].keys():
-        sprintId = session["sprint_mapping"][key]
-        sprint_key = len(session["sprint_mapping"]) - int(key) + 1
-        data_to_plot[sprint_key] = {}
-
-        # partial work done
-        thread1 = Thread(target=partialWorkDone, args=(project_id, sprintId, auth_token, data_to_plot, sprint_key))
-
-        # total work done
-        thread2 = Thread(target=totalWorkDone, args=(project_id, sprintId, auth_token, data_to_plot, sprint_key))
-
-        # business value
-        thread3 = Thread(target=get_business_value_data_for_sprint, args=(project_id, sprintId, auth_token, data_to_plot, sprint_key))
-
-        thread1.start()
-        thread2.start()
-        thread3.start()
-        threads.append(thread1)
-        threads.append(thread2)
-        threads.append(thread3)
-
-    for thread in threads:
-        thread.join()
-
-
-    print(json.dumps(data_to_plot, indent=4))
-
-    return render_template("multi-sprint-bd.html", data_to_plot=data_to_plot)
+    project_id = session["project_id"]
+    auth_token = session["auth_token"]
+    res = requests.post(f"http://multi_sprint_burndown:5000/{project_id}/{auth_token}/multi-sprint-bd", json={"sprint_mapping": session["sprint_mapping"]})
+    if(res.status_code == 500):
+        return redirect('/error')
+    return res.text, res.status_code
 
 @app.route("/arbitrary-lead-time", methods=["GET", "POST"])
 def get_arbitrary_lead_time():
