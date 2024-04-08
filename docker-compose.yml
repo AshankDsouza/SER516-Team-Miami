@@ -7,8 +7,8 @@ services:
       - "5000:5000"
     environment:
       - TAIGA_URL=https://api.taiga.io/api/v1
-
       - LOGIN_MICROSERVICE_BASE_URL=http://login_microservice:5000
+      - BURNDOWN_BV_BASE_URL=http://burndown_bv_microservice:5000
       - MICROSERVICE_VIP_BASE_URL=http://microservice_vip:5000
       - LEADTIME_MICROSERVICE_BASE_URL=http://leadtime_microservice:5000
       - WORK_AUC_MICROSERVICE_BASE_URL=http://work_auc_microservice:5000
@@ -16,6 +16,7 @@ services:
     volumes:
       - .:/app
       # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
+      # - "/Users/keer/Desktop/SER516-Team-Miami/Backend/flaskProject/:/app/Backend/flaskProject/"
     working_dir: /app/Backend
     networks:
       - microservice_network
@@ -27,8 +28,13 @@ services:
     networks:
       - microservice_network
 
+  burndown_bv_microservice:
+    build: ./burndown_bv_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
 
-  
   microservice_vip:
     build: ./microservice_vip
     expose:
@@ -64,6 +70,17 @@ services:
       - "5000"
     networks:
       - microservice_network
+
+  bd_consistency:
+    build: ./bdConsistency_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+
+    # volumes:
+      # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\bdConsistency_microservice\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
+      # - "/Users/keer/Desktop/SER516-Team-Miami/bdConsistency_microservice/Backend/flaskProject/:/app/Backend/flaskProject/"
       
 networks:
   microservice_network:

@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  bd_consistency:
+    build: .
+    ports:
+      - "5000:5000"
