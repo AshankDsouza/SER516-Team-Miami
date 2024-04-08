@@ -50,7 +50,7 @@ app = Flask(__name__)
 
 @app.route('/render-bd-view', methods=["GET"])
 def uiRender():
-    return render_template("BD-Consistency-graph.html")
+    return render_template("BD-consistency-graph.html")
 
 
 @app.route("/<project_id>/<sprint_id>/<auth_token>/bd-calculation", methods=["GET"])

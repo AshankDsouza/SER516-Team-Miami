@@ -79,10 +79,6 @@ services:
     networks:
       - microservice_network
 
-    # volumes:
-      # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\bdConsistency_microservice\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
-      # - "/Users/keer/Desktop/SER516-Team-Miami/bdConsistency_microservice/Backend/flaskProject/:/app/Backend/flaskProject/"
-  
   microservice_cycle_time:
     build: ./microservice_cycle_time
     expose:
@@ -90,6 +86,14 @@ services:
     networks:
       - microservice_network
       
+    
+  multi_sprint_burndown:
+    build: ./multisprintBurndown_microservice
+    expose:
+      - "5000"
+    networks:
+      - microservice_network
+
 networks:
   microservice_network:
     driver: bridge
