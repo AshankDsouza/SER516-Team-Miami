@@ -362,14 +362,13 @@ def work_auc_microservice():
     # if request.method == "GET":
     try:
         microservice_response = requests.get(
-            url="http://work_auc_microservice:5000/work-auc-data",
+            "http://work_auc_microservice:5000/work-auc-data",
             data={
                 "project_id": session["project_id"],
                 "auth_token": session["auth_token"],
             },
         )
-        if microservice_response.status_code == 200:
-            return microservice_response.json()
+        return microservice_response.json()
 
     except Exception as e:
         print(e)

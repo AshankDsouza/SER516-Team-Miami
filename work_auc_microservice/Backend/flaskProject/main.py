@@ -126,14 +126,11 @@ def get_work_auc_data():
         for i in range(sprints):
             sprint_label.append("Sprint " + str(i + 1))
 
-        return (
-            jsonify(
-                {
-                    "x_axis": sprint_label,
-                    "work_auc_by_sprint_order": work_auc_by_sprint_order,
-                }
-            ),
-            200,
+        return jsonify(
+            {
+                "x_axis": sprint_label,
+                "work_auc_by_sprint_order": work_auc_by_sprint_order,
+            }
         )
 
     except Exception as e:
