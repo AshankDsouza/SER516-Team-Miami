@@ -142,7 +142,6 @@ def burndown_graph():
     return render_template("burndown-graph.html")
 
 
-
 @app.route("/<user_story>/get-business-value", methods=["GET"])
 def get_business_value_by_user_story(user_story):
     if "auth_token" not in session:
@@ -340,22 +339,22 @@ def render_burndown_bv():
     return render_template("burndown-bv.html")
 
 
-@app.route("/burndown-bv-data", methods=["GET", "POST"])
+@app.route("/burndown-bv-data", methods=["GET"])
 def burndown_bv_microservice():
-    if request.method == "GET":
-        s = requests.Session()
-        microservice_response = s.post(
-            url="http://burndown_bv_microservice:5000/burndown-bv-data",
+    try:
+        microservice_response = requests.get(
+            "http://burndown_bv_microservice:5000/burndown-bv-data",
             data={
                 "project_id": session["project_id"],
                 "sprint_id": session["sprint_id"],
                 "auth_token": session["auth_token"],
             },
         )
-        if microservice_response.status_code == 200:
-            return microservice_response.json()
-        else:
-            return redirect("/error")
+        return microservice_response.json()
+
+    except Exception as e:
+        print(e)
+        return redirect("/error")
 
 
 @app.route("/work-auc")
@@ -653,7 +652,7 @@ def bd_calculations():
         
     #data needs for calculation
     #running_bv_data, ideal_bv_data, data_to_plot["actual_projection"], data_to_plot["totla_story_points"]
-        
+
 
 @app.route("/multiple-bd", methods=["GET"])
 def render_multiple_bd_page():
