@@ -7,7 +7,7 @@ class LeadTimeTest(unittest.TestCase):
         self.app = app.test_client()
         self.app.testing = True
 
-    @patch('Backend.flaskProject.main.requests.post')
+    @patch('Backend.flaskProject.main.requests.get')
     def test_lt(self, fake_post):
         with self.app.session_transaction() as fake_session:
             fake_session['auth_token'] = 'fake_auth_token'
