@@ -8,7 +8,7 @@ class PartialWorkDoneTest(unittest.TestCase):
         self.app.testing = True
 
     @patch('Backend.flaskProject.main.requests.get')
-    def twd_test(self, fake_post):
+    def test_bd(self, fake_post):
         with self.app.session_transaction() as fake_session:
             fake_session['auth_token'] = 'fake_auth_token'
         fake_response = MagicMock()
