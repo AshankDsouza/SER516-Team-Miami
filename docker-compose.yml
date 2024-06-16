@@ -16,8 +16,6 @@ services:
 
     volumes:
       - .:/app
-      # - "C:\\Users\\Manoj A M\\Desktop\\Assignment\\SEM 1\\Software Agility\\Team-Miami\\SER516-Team-Miami\\Backend\\flaskProject\\:/app/Backend/flaskProject/"
-      # - "/Users/keer/Desktop/SER516-Team-Miami/Backend/flaskProject/:/app/Backend/flaskProject/"
     working_dir: /app/Backend
     networks:
       - microservice_network
